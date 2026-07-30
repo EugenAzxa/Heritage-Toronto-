@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# Temp / build artifacts
+_shot.html
+*.log
+
+# Raw source photos (large originals; web-ready copies live in /assets)
+*.HEIC
+Albert+jackson.jpg.webp
+albert_jackson_postman.jpg
+albertjacksonstamp.jpg
+e010963829-v8.jpg
