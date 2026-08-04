@@ -88,52 +88,82 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 /* ============================================================
    HEADER
    ============================================================ */
-/* The header spans both halves of the split hero, so it cannot be
-   transparent: dark nav links would sit on the navy pane at about
-   1.5:1. It carries its own parchment ground from the first paint. */
+/* The hero is a night sky, so the header rides over it in cream and
+   only takes a parchment ground once you scroll past it. */
 .site-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; gap: 1.5rem;
-  padding: 0.85rem var(--gutter);
-  background: rgba(246, 238, 221, 0.94);
-  backdrop-filter: saturate(1.3) blur(12px);
-  -webkit-backdrop-filter: saturate(1.3) blur(12px);
-  box-shadow: 0 1px 0 rgba(195, 154, 80, 0.45);
-  transition: box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
+  display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.5rem);
+  padding: 1.1rem var(--gutter);
+  background: transparent;
+  box-shadow: none;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease),
+              padding 0.4s var(--ease), backdrop-filter 0.4s var(--ease);
 }
+/* Unscrolled, the header floats over the planet, whose landmasses are
+   nearly parchment. Without this scrim the nav drops under 3:1. */
+.site-header::before {
+  content: ""; position: absolute; inset: -1px 0 auto 0; height: 190%;
+  z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(4, 8, 16, 0.92) 0%, rgba(4, 8, 16, 0.55) 45%, transparent 100%);
+  transition: opacity 0.4s var(--ease);
+}
+.site-header.scrolled::before { opacity: 0; }
+.atlas-body .site-header::before { opacity: 0; }
 .site-header.scrolled {
-  box-shadow: 0 1px 0 var(--line), var(--shadow-sm);
-  padding-top: 0.6rem; padding-bottom: 0.6rem;
+  background: rgba(246, 238, 221, 0.95);
+  backdrop-filter: saturate(1.3) blur(14px);
+  -webkit-backdrop-filter: saturate(1.3) blur(14px);
+  box-shadow: 0 1px 0 rgba(195, 154, 80, 0.42), var(--shadow-sm);
+  padding-top: 0.62rem; padding-bottom: 0.62rem;
 }
 
-.brand { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; color: var(--navy); }
+/* Pages without a dark hero (the atlas) start in the solid state. */
+.atlas-body .site-header { background: rgba(246, 238, 221, 0.95); }
+
+.brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--cream); }
+.site-header.scrolled .brand { color: var(--navy); }
 .brand-mark {
-  display: grid; place-items: center; width: 38px; height: 38px;
-  border-radius: 10px; background: var(--navy); color: var(--brass-light);
-  box-shadow: var(--shadow-sm);
+  display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 11px; background: var(--brass-light); color: var(--navy-deep);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
 }
-.site-header.scrolled .brand-mark { background: var(--navy); }
+.site-header.scrolled .brand-mark { background: var(--navy); color: var(--brass-light); }
 .brand-text { display: flex; flex-direction: column; line-height: 1; font-family: var(--font-sans); }
-.brand-text strong { font-size: 1.02rem; letter-spacing: 0.01em; }
-.brand-text em { font-style: normal; font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.14em; margin-top: 3px; }
-
-.site-nav { display: flex; gap: 1.6rem; margin-left: auto; font-family: var(--font-sans); font-size: 0.94rem; }
-.site-nav a {
-  text-decoration: none; color: var(--ink-soft); font-weight: 500;
-  position: relative; padding: 4px 0; transition: color 0.2s var(--ease);
+.brand-text strong { font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; }
+.brand-text strong i { font-style: normal; opacity: 0.55; margin: 0 0.15em; }
+.brand-text em {
+  font-style: normal; font-size: 0.66rem; margin-top: 4px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(252, 248, 239, 0.6);
 }
+.site-header.scrolled .brand-text em { color: var(--ink-faint); }
+
+.site-nav {
+  display: flex; gap: clamp(1rem, 2.2vw, 2rem); margin-left: auto;
+  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.site-nav a {
+  text-decoration: none; color: rgba(252, 248, 239, 0.92);
+  position: relative; padding: 6px 0; white-space: nowrap;
+  transition: color 0.2s var(--ease);
+}
+.site-header.scrolled .site-nav a { color: var(--ink-soft); }
 .site-nav a::after {
   content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
-  background: var(--crimson); transition: width 0.25s var(--ease);
+  background: var(--brass-light); transition: width 0.25s var(--ease);
 }
-.site-nav a:hover { color: var(--navy); }
+.site-header.scrolled .site-nav a::after { background: var(--crimson); }
+.site-nav a:hover { color: var(--cream); }
+.site-header.scrolled .site-nav a:hover { color: var(--navy); }
 .site-nav a:hover::after { width: 100%; }
 
 .nav-cta {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  font-family: var(--font-sans); font-size: 0.9rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 0.45rem; flex-shrink: 0;
+  font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
   text-decoration: none; color: #fff; background: var(--crimson);
-  padding: 0.6rem 1.05rem; border-radius: 999px; box-shadow: var(--shadow-sm);
+  padding: 0.62rem 1.1rem; border-radius: 999px; box-shadow: var(--shadow-sm);
   transition: transform 0.2s var(--ease), background 0.2s var(--ease);
 }
 .nav-cta:hover { background: var(--crimson-deep); transform: translateY(-1px); }
@@ -145,11 +175,17 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 
 .nav-toggle {
   display: none; margin-left: auto; cursor: pointer;
-  width: 44px; height: 44px; padding: 0; border: none; border-radius: 10px;
-  background: rgba(22, 35, 63, 0.07); color: var(--navy);
+  width: 44px; height: 44px; padding: 0; border-radius: 11px;
+  background: rgba(252, 248, 239, 0.1); color: var(--cream);
+  border: 1px solid rgba(252, 248, 239, 0.2);
   place-items: center; transition: background 0.2s var(--ease);
 }
-.nav-toggle:hover { background: rgba(22, 35, 63, 0.14); }
+.site-header.scrolled .nav-toggle {
+  background: rgba(22, 35, 63, 0.07); color: var(--navy);
+  border-color: rgba(22, 35, 63, 0.12);
+}
+.nav-toggle:hover { background: rgba(252, 248, 239, 0.2); }
+.site-header.scrolled .nav-toggle:hover { background: rgba(22, 35, 63, 0.14); }
 .nav-toggle-bars { display: block; width: 19px; height: 13px; position: relative; }
 .nav-toggle-bars span {
   position: absolute; left: 0; height: 2px; width: 100%; border-radius: 2px;
@@ -166,10 +202,144 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
    HERO
    ============================================================ */
 /* ============================================================
-   SPLIT HERO  -  two ways in, side by side
-   Left pane: Heritage, parchment, daylight.
-   Right pane: Famous People, navy, night, with the globe
-   cropped at the screen edge.
+   STAGE HERO
+   The collaboration, not the subject. A night sky, a turning
+   planet, and the people who came off it. Albert is the worked
+   example and lives below the fold.
+   ============================================================ */
+.stage {
+  position: relative;
+  min-height: 100svh;
+  display: flex; align-items: center;
+  padding: clamp(7rem, 16vh, 11rem) var(--gutter) clamp(6rem, 12vh, 8rem);
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 780px at 72% 46%, rgba(34, 51, 84, 0.85), transparent 68%),
+    radial-gradient(900px 620px at 12% 8%, rgba(195, 154, 80, 0.13), transparent 62%),
+    linear-gradient(178deg, #070C17 0%, var(--navy-deep) 46%, #0A1424 100%);
+  color: var(--cream);
+}
+
+.stage-stars { position: absolute; inset: 0; z-index: 0; display: block; }
+
+/* The planet: large, offset right, half of it beyond the edge */
+.stage-planet {
+  position: absolute; z-index: 1;
+  top: 50%; left: 68%;
+  width: min(1180px, 96vw); aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.stage-planet canvas { display: block; }
+.stage-planet-fallback {
+  position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 30%, rgba(195,154,80,0.26), transparent 48%),
+    radial-gradient(circle at 64% 68%, rgba(160,43,34,0.20), transparent 54%),
+    linear-gradient(150deg, #1d3054 0%, #101c31 60%, #070E1A 100%);
+  box-shadow: inset -40px -30px 120px rgba(0,0,0,0.66), 0 0 160px rgba(195,154,80,0.12);
+  transition: opacity 0.9s var(--ease);
+}
+.stage-planet.live .stage-planet-fallback { opacity: 0; }
+
+/* Portrait medallions of figures from the atlas */
+.stage-faces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.stage-face {
+  position: absolute; left: var(--fx); top: var(--fy);
+  width: var(--fs); height: var(--fs);
+  margin: calc(var(--fs) / -2) 0 0 calc(var(--fs) / -2);
+  border-radius: 50%; overflow: hidden;
+  background: var(--navy-soft);
+  box-shadow: 0 0 0 1.5px rgba(226, 200, 140, 0.7), 0 14px 40px rgba(0,0,0,0.5);
+  opacity: 0;
+  animation: faceIn 1.1s var(--ease) var(--fdelay) forwards,
+             faceBob var(--fdur) ease-in-out var(--fdelay) infinite alternate;
+}
+.stage-face img { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.3) contrast(1.03); }
+.stage-face span {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--font-sans); font-weight: 700; font-size: 0.8rem;
+  color: var(--brass-light); background: var(--navy);
+}
+@keyframes faceIn { to { opacity: 1; } }
+@keyframes faceBob {
+  from { transform: translate3d(0, 7px, 0)  rotate(-1.6deg); }
+  to   { transform: translate3d(0, -9px, 0) rotate(1.6deg);  }
+}
+
+/* Keeps the copy readable over whatever is behind it */
+.stage-veil {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(97deg,
+    #070C17 0%, rgba(7,12,23,0.94) 24%, rgba(7,12,23,0.68) 45%,
+    rgba(7,12,23,0.16) 68%, transparent 88%);
+}
+
+.stage-inner { position: relative; z-index: 4; max-width: 40rem; }
+
+.stage-kicker {
+  display: inline-flex; align-items: center; gap: 0.7rem; margin: 0 0 1.6rem;
+  padding: 0.45rem 1rem; border-radius: 999px;
+  background: rgba(195, 154, 80, 0.1);
+  border: 1px solid rgba(195, 154, 80, 0.42);
+  font-family: var(--font-sans); font-size: 0.74rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--brass-light);
+}
+.stage-kicker i { font-style: normal; opacity: 0.6; }
+
+.stage-title {
+  font-size: clamp(2.9rem, 6.4vw, 5.6rem);
+  font-weight: 600; letter-spacing: -0.028em; line-height: 1.02;
+  color: var(--cream); margin: 0 0 1.5rem;
+  text-shadow: 0 2px 30px rgba(0,0,0,0.4);
+}
+.stage-lede {
+  font-size: clamp(1.05rem, 1.35vw, 1.24rem); line-height: 1.62;
+  color: rgba(252, 248, 239, 0.8); max-width: 46ch; margin: 0 0 2.2rem;
+}
+
+.stage-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 2.8rem; }
+.btn-outline {
+  background: transparent; color: var(--cream);
+  box-shadow: inset 0 0 0 1.5px rgba(252, 248, 239, 0.42);
+}
+.btn-outline:hover {
+  background: rgba(252, 248, 239, 0.1); transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1.5px var(--brass-light);
+}
+.btn-outline:hover svg { transform: translateX(4px); }
+
+.stage-facts { display: flex; gap: clamp(1.4rem, 3.4vw, 3rem); margin: 0; flex-wrap: wrap; }
+.stage-facts div { display: flex; flex-direction: column; }
+.stage-facts dt {
+  font-family: var(--font-serif); font-size: 2rem; font-weight: 600;
+  color: var(--brass-light); line-height: 1;
+}
+.stage-facts dd {
+  margin: 0.35rem 0 0; font-family: var(--font-sans); font-size: 0.79rem;
+  color: rgba(252, 248, 239, 0.66); max-width: 16ch; line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .stage { text-align: center; justify-content: center; }
+  .stage-inner { margin-inline: auto; }
+  .stage-kicker, .stage-actions, .stage-facts { justify-content: center; }
+  .stage-lede { margin-inline: auto; }
+  .stage-planet { left: 50%; top: 38%; width: min(760px, 130vw); }
+  .stage-veil {
+    background: linear-gradient(184deg,
+      rgba(7,12,23,0.72) 0%, rgba(7,12,23,0.5) 28%,
+      rgba(7,12,23,0.86) 62%, #070C17 100%);
+  }
+  .stage-face { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-face { animation: faceIn 0.01s forwards; }
+}
+
+/* ============================================================
+   SPLIT HERO  (retained: still used for section layout helpers)
    ============================================================ */
 .split {
   position: relative;
@@ -357,6 +527,9 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
 }
 .scroll-hint:hover { color: var(--crimson); }
+/* On the dark stage the hint needs to be light, not ink */
+.stage .scroll-hint { left: 50%; color: rgba(252, 248, 239, 0.72); }
+.stage .scroll-hint:hover { color: var(--brass-light); }
 .scroll-hint svg { animation: bob 1.8s var(--ease) infinite; }
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
