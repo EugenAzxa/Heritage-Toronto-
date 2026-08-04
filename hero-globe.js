@@ -25,16 +25,8 @@
     "https://cdn.jsdelivr.net/npm/globe.gl/example/datasets/ne_110m_admin_0_countries.geojson",
   ];
 
-  const FIELD_COLOR = {
-    freedom: "#A02B22",
-    science: "#4E86B4",
-    arts: "#C39A50",
-    music: "#9A6BAE",
-    leadership: "#C7563F",
-    thought: "#5E9E82",
-    exploration: "#D8894B",
-    sport: "#6D8FA8",
-  };
+  // The two Toronto lives this site is about, highlighted among the rest.
+  const TORONTO = new Set(["albert-jackson", "ann-maria-jackson"]);
 
   const mount = document.getElementById("heroGlobe");
   if (!mount) return;
@@ -94,11 +86,13 @@
     }
     if (typeof window.Globe !== "function") return;
 
-    const [countries, atlas] = await Promise.all([
+    const [geo, atlas] = await Promise.all([
       loadJSON(COUNTRIES),
       loadJSON("data/people.json"),
     ]);
 
+    // polygonsData needs the feature array, not the FeatureCollection.
+    const countries = geo && Array.isArray(geo.features) ? geo.features : null;
     const people = atlas && Array.isArray(atlas.people) ? atlas.people : [];
 
     world = Globe()(mount)
@@ -131,13 +125,16 @@
     }
 
     if (people.length) {
+      // Brass for the world, crimson for the two Toronto lives this site
+      // is actually about. The full field palette belongs on the atlas
+      // page, where a legend explains it; here it would read as confetti.
       world
         .pointsData(people)
         .pointLat("lat")
         .pointLng("lng")
-        .pointColor((p) => FIELD_COLOR[p.field] || "#C39A50")
-        .pointAltitude(0.03)
-        .pointRadius(0.28)
+        .pointColor((p) => (TORONTO.has(p.id) ? "#A02B22" : "#C39A50"))
+        .pointAltitude((p) => (TORONTO.has(p.id) ? 0.05 : 0.028))
+        .pointRadius((p) => (TORONTO.has(p.id) ? 0.4 : 0.3))
         .pointsTransitionDuration(0);
     }
 

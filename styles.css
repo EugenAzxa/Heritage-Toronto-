@@ -88,17 +88,20 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 /* ============================================================
    HEADER
    ============================================================ */
+/* The header spans both halves of the split hero, so it cannot be
+   transparent: dark nav links would sit on the navy pane at about
+   1.5:1. It carries its own parchment ground from the first paint. */
 .site-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; gap: 1.5rem;
   padding: 0.85rem var(--gutter);
-  background: rgba(246, 238, 221, 0);
-  transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
-}
-.site-header.scrolled {
-  background: rgba(246, 238, 221, 0.92);
+  background: rgba(246, 238, 221, 0.94);
   backdrop-filter: saturate(1.3) blur(12px);
   -webkit-backdrop-filter: saturate(1.3) blur(12px);
+  box-shadow: 0 1px 0 rgba(195, 154, 80, 0.45);
+  transition: box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
+}
+.site-header.scrolled {
   box-shadow: 0 1px 0 var(--line), var(--shadow-sm);
   padding-top: 0.6rem; padding-bottom: 0.6rem;
 }
@@ -134,6 +137,30 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   transition: transform 0.2s var(--ease), background 0.2s var(--ease);
 }
 .nav-cta:hover { background: var(--crimson-deep); transform: translateY(-1px); }
+
+/* ---- Mobile menu ---- */
+/* Mirror of the CTA that nav.js appends into the panel. Only ever
+   shown inside the open mobile menu, never in the desktop nav row. */
+.nav-cta-mobile { display: none; }
+
+.nav-toggle {
+  display: none; margin-left: auto; cursor: pointer;
+  width: 44px; height: 44px; padding: 0; border: none; border-radius: 10px;
+  background: rgba(22, 35, 63, 0.07); color: var(--navy);
+  place-items: center; transition: background 0.2s var(--ease);
+}
+.nav-toggle:hover { background: rgba(22, 35, 63, 0.14); }
+.nav-toggle-bars { display: block; width: 19px; height: 13px; position: relative; }
+.nav-toggle-bars span {
+  position: absolute; left: 0; height: 2px; width: 100%; border-radius: 2px;
+  background: currentColor; transition: transform 0.28s var(--ease), opacity 0.2s var(--ease);
+}
+.nav-toggle-bars span:nth-child(1) { top: 0; }
+.nav-toggle-bars span:nth-child(2) { top: 5.5px; }
+.nav-toggle-bars span:nth-child(3) { top: 11px; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
 
 /* ============================================================
    HERO
@@ -227,13 +254,30 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
     transparent 100%);
 }
 
-/* Light-pane variants of the shared hero type */
-.hero-title--light { color: var(--cream); }
-.hero-lede--light  { color: rgba(252,248,239,0.78); }
-.eyebrow--light           { color: var(--brass-light); }
-.eyebrow--light .eyebrow-line { background: var(--brass-light); }
-.hero-facts--light dt { color: var(--brass-light); }
-.hero-facts--light dd { color: rgba(252,248,239,0.66); }
+/* Dark-pane type. Scoped to the pane rather than a modifier class so
+   these always outrank the base .hero-* rules regardless of source
+   order. A plain .hero-title--light loses to .hero-title on equal
+   specificity, which rendered the title navy-on-navy. */
+.split-world .hero-title { color: var(--cream); }
+.split-world .hero-lede  { color: rgba(252, 248, 239, 0.82); }
+.split-world .eyebrow    { color: var(--brass-light); }
+.split-world .eyebrow-line { background: var(--brass-light); }
+.split-world .hero-facts dt { color: var(--brass-light); }
+.split-world .hero-facts dd { color: rgba(252, 248, 239, 0.7); }
+
+/* Faint postmark watermark, the one heritage flourish the left pane keeps.
+   Sits in the empty upper-right of the pane, clear of the copy column
+   and well clear of the facts row. */
+.split-heritage .postmark {
+  position: absolute; z-index: 1;
+  top: clamp(6rem, 14vh, 10rem); right: clamp(1rem, 3vw, 3.25rem);
+  bottom: auto; left: auto;
+  color: var(--crimson); opacity: 0.15;
+  transform: rotate(-11deg) scale(1.85);
+  transform-origin: top right;
+  pointer-events: none;
+}
+@media (max-width: 1180px) { .split-heritage .postmark { display: none; } }
 
 .eyebrow, .section-eyebrow {
   display: flex; align-items: center; gap: 0.8rem;
@@ -277,28 +321,6 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .hero-facts div { display: flex; flex-direction: column; }
 .hero-facts dt { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; color: var(--crimson); }
 .hero-facts dd { margin: 0; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-faint); letter-spacing: 0.03em; max-width: 15ch; }
-
-/* Stamp card, now a floating detail in the bottom corner of the
-   heritage pane. Hidden on narrower screens so the copy can breathe. */
-.split-heritage .stamp-card {
-  position: absolute; z-index: 2;
-  right: clamp(1.5rem, 3vw, 3rem); bottom: clamp(3.5rem, 7vh, 5rem);
-  width: clamp(150px, 15vw, 205px);
-}
-.split-heritage .stamp-card figcaption { display: none; }
-.split-heritage .postmark {
-  position: absolute; z-index: 3;
-  right: clamp(0.6rem, 2vw, 2.1rem); bottom: calc(clamp(3.5rem, 7vh, 5rem) + clamp(150px, 15vw, 205px) - 46px);
-  top: auto;
-  width: 86px; height: 86px;
-}
-.split-heritage .postmark svg { width: 86px; height: 86px; }
-.split-heritage:hover .stamp-card { transform: rotate(-1deg) translateY(-4px); }
-
-@media (max-width: 1180px) {
-  .split-heritage .stamp-card,
-  .split-heritage .postmark { display: none; }
-}
 
 .stamp-card {
   position: relative; margin: 0; max-width: 380px;
@@ -490,8 +512,127 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 }
 .speak-head { max-width: 640px; margin: 0 auto clamp(2.5rem, 5vw, 3.5rem); text-align: center; }
 
+/* ---- Speak layout: portrait beside the conversation ---- */
+.speak-body {
+  max-width: 1010px; margin: 0 auto;
+  display: grid; grid-template-columns: 210px 1fr; gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+}
+
+/* ---- Albert's animated portrait ----
+   Every layer is the same archival photograph. The blink is that
+   photo's own brow-skin drawn briefly over the eye; the speech
+   motion is that photo's own jaw, masked and nudged. Nothing is
+   redrawn, recoloured, or generated. */
+.albert-stage { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+
+/* A mounted archival print. The photograph carries its own oval
+   vignette, so the mount stays a plain rectangle rather than adding
+   a competing arch. */
+.albert-frame {
+  position: relative; width: 100%; aspect-ratio: 400 / 545;
+  border-radius: 10px;
+  overflow: hidden; isolation: isolate;
+  background: #EFEAE0;
+  box-shadow: 0 0 0 1px rgba(195,154,80,0.5), var(--shadow-lg);
+}
+.albert-frame img,
+.albert-jaw,
+.albert-lid {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 22%;
+  filter: sepia(0.18) contrast(1.04);
+}
+.albert-frame img {
+  transition: transform 0.5s var(--ease);
+  will-change: transform;
+}
+
+/* Shared background copy for the overlay layers */
+.albert-jaw, .albert-lid {
+  background-image: url("assets/portrait-1882.jpg");
+  background-size: cover; background-position: center 22%;
+  pointer-events: none;
+}
+
+/* Jaw: the mouth region, softly masked, nudged down while speaking */
+.albert-jaw {
+  -webkit-mask-image: radial-gradient(ellipse 20% 9% at 50% 50%, #000 38%, transparent 74%);
+          mask-image: radial-gradient(ellipse 20% 9% at 50% 50%, #000 38%, transparent 74%);
+  transform-origin: 50% 41%;
+  transform: scaleY(1);
+  opacity: 0;
+}
+.albert-stage.speaking .albert-jaw {
+  opacity: 1;
+  animation: albertSpeak 320ms ease-in-out infinite alternate;
+}
+@keyframes albertSpeak {
+  from { transform: scaleY(1)     translateY(0);     }
+  to   { transform: scaleY(1.055) translateY(0.7%); }
+}
+
+/* Lids: brow skin from just above each eye, flashed over it */
+.albert-lid {
+  transform: translateY(-3.1%);
+  opacity: 0;
+  transition: opacity 70ms linear;
+}
+.albert-lid--l {
+  -webkit-mask-image: radial-gradient(ellipse 9% 4.2% at 43% 37%, #000 45%, transparent 78%);
+          mask-image: radial-gradient(ellipse 9% 4.2% at 43% 37%, #000 45%, transparent 78%);
+}
+.albert-lid--r {
+  -webkit-mask-image: radial-gradient(ellipse 9% 4.2% at 57.5% 37%, #000 45%, transparent 78%);
+          mask-image: radial-gradient(ellipse 9% 4.2% at 57.5% 37%, #000 45%, transparent 78%);
+}
+.albert-stage.blink .albert-lid { opacity: 1; }
+
+/* Warm glow while he is talking */
+.albert-halo {
+  position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 0 0 rgba(195,154,80,0);
+  transition: box-shadow 0.4s var(--ease);
+}
+.albert-stage.speaking .albert-halo {
+  box-shadow: inset 0 0 46px 6px rgba(195,154,80,0.28);
+}
+
+.albert-stage figcaption {
+  font-family: var(--font-sans); font-size: 0.72rem; letter-spacing: 0.06em;
+  color: rgba(252,248,239,0.62); text-align: center;
+}
+
+.albert-motion {
+  display: inline-flex; align-items: center; gap: 0.42rem; cursor: pointer;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.7rem; min-height: 32px; border-radius: 999px;
+  color: rgba(252,248,239,0.72); background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  transition: all 0.2s var(--ease);
+}
+.albert-motion:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.albert-motion-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint);
+}
+.albert-motion[aria-pressed="true"] { color: var(--brass-light); border-color: rgba(195,154,80,0.45); }
+.albert-motion[aria-pressed="true"] .albert-motion-dot {
+  background: #6FCF97; box-shadow: 0 0 0 3px rgba(111,207,151,0.22);
+}
+
+@media (max-width: 860px) {
+  .speak-body { grid-template-columns: 1fr; justify-items: center; }
+  .albert-stage { width: 170px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .albert-stage.speaking .albert-jaw { animation: none; opacity: 0; }
+  .albert-frame img { transition: none; }
+}
+
 .chat {
-  max-width: 760px; margin: 0 auto;
+  max-width: 760px; margin: 0 auto; width: 100%; min-width: 0;
   background: var(--cream); color: var(--ink);
   border-radius: var(--radius-lg); overflow: hidden;
   box-shadow: var(--shadow-lg);
@@ -520,8 +661,47 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .chat-mode--offline { color: rgba(252,248,239,0.62); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
 .chat-mode--checking{ color: var(--brass-light); background: rgba(195,154,80,0.16); border-color: rgba(195,154,80,0.4); }
 
+/* Voice toggle: Albert reads his answers aloud */
+.chat-voice {
+  margin-left: 0.5rem; display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600;
+  color: rgba(252,248,239,0.8); background: rgba(255,255,255,0.08);
+  border: 1px solid transparent; padding: 0.45rem 0.75rem; border-radius: 999px;
+  cursor: pointer; transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.chat-voice:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.chat-voice .wave-1, .chat-voice .wave-2 { opacity: 0.35; transition: opacity 0.2s var(--ease); }
+.chat-voice.on {
+  background: rgba(195,154,80,0.2); color: var(--brass-light);
+  border-color: rgba(195,154,80,0.5);
+}
+.chat-voice.on .wave-1 { opacity: 1; animation: waveOn 1.4s ease-in-out infinite; }
+.chat-voice.on .wave-2 { opacity: 1; animation: waveOn 1.4s ease-in-out 0.25s infinite; }
+@keyframes waveOn { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+/* Microphone: the visitor asks out loud. Scoped to .chat-input so it
+   outranks the filled crimson `.chat-input button` send styling; the
+   mic is the secondary action and should not read as a second Send. */
+.chat-input .chat-mic {
+  display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0;
+  background: transparent; color: var(--navy);
+  border: 1.5px solid var(--line); border-radius: 50%; cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.chat-input .chat-mic:hover {
+  border-color: var(--navy); background: var(--parchment); transform: none;
+}
+.chat-input .chat-mic.on {
+  background: var(--crimson); border-color: var(--crimson); color: #fff;
+  animation: micPulse 1.3s ease-in-out infinite;
+}
+@keyframes micPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(160,43,34,0.45); }
+  60%     { box-shadow: 0 0 0 12px rgba(160,43,34,0); }
+}
+
 .chat-reset {
-  margin-left: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem;
+  margin-left: 0.5rem; display: inline-flex; align-items: center; gap: 0.4rem;
   font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600;
   color: rgba(252,248,239,0.8); background: rgba(255,255,255,0.08);
   border: none; padding: 0.45rem 0.75rem; border-radius: 999px; cursor: pointer;
@@ -711,7 +891,39 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
    RESPONSIVE
    ============================================================ */
 @media (max-width: 960px) {
-  .site-nav { display: none; }
+  /* The nav collapses into a panel rather than vanishing. Hiding it
+     outright left phone visitors with no way to reach any section. */
+  .nav-toggle { display: inline-grid; }
+  .site-nav {
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; gap: 0; padding: 0.4rem var(--gutter) 1rem;
+    background: rgba(246, 238, 221, 0.98);
+    backdrop-filter: saturate(1.3) blur(12px);
+    -webkit-backdrop-filter: saturate(1.3) blur(12px);
+    box-shadow: 0 14px 30px rgba(20, 15, 6, 0.16);
+    border-bottom: 1px solid var(--line);
+    font-size: 1.05rem;
+    visibility: hidden; opacity: 0; transform: translateY(-10px);
+    transition: opacity 0.24s var(--ease), transform 0.24s var(--ease), visibility 0.24s;
+  }
+  .site-nav a {
+    padding: 0.85rem 0; border-bottom: 1px solid rgba(222, 208, 178, 0.55);
+    color: var(--navy);
+  }
+  .site-nav a:last-of-type { border-bottom: none; }
+  .site-nav a::after { display: none; }
+
+  .nav-cta { display: none; }
+  .site-nav .nav-cta-mobile {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+    margin-top: 0.9rem; padding: 0.8rem 1.05rem; border-radius: 999px;
+    background: var(--crimson); color: #fff; font-family: var(--font-sans);
+    font-weight: 600; font-size: 0.95rem; text-decoration: none; border-bottom: none;
+  }
+
+  .site-header.nav-open .site-nav {
+    visibility: visible; opacity: 1; transform: none;
+  }
   /* Hero copy stays left-aligned here: the split is still two columns
      until 860px, and centring it mid-column reads as a mistake. */
   .legacy-grid { grid-template-columns: 1fr; }

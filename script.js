@@ -281,6 +281,269 @@
     setMode(liveMode ? "live" : "offline");
   }
 
+  /* ============================================================
+     ALBERT'S VOICE
+     Speech synthesis so he reads his answers aloud, and speech
+     recognition so visitors can simply ask out loud. Both are
+     progressive: the buttons stay hidden on browsers without the
+     APIs (recognition is missing in Firefox, for instance), and
+     the chat works exactly as before without them.
+     ============================================================ */
+
+  const chatVoice = document.getElementById("chatVoice");
+  const chatVoiceLabel = document.getElementById("chatVoiceLabel");
+  const chatMic = document.getElementById("chatMic");
+
+  const synth = window.speechSynthesis || null;
+  let voiceOn = false;
+  let albertVoice = null;
+
+  /* Pick the closest thing to a measured, older Canadian man that the
+     visitor's device happens to offer. Ordered best-effort. */
+  function pickVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+
+    const preferred = [
+      /Google UK English Male/i,
+      /\bDaniel\b/i,
+      /Microsoft (Guy|Ryan|George|David)/i,
+      /\bAlex\b/i,
+      /\bFred\b/i,
+    ];
+    const english = voices.filter((v) => /^en(-|_|$)/i.test(v.lang));
+    for (const rx of preferred) {
+      const hit = english.find((v) => rx.test(v.name));
+      if (hit) {
+        albertVoice = hit;
+        return;
+      }
+    }
+    albertVoice =
+      english.find((v) => /en-CA/i.test(v.lang)) ||
+      english.find((v) => /en-GB/i.test(v.lang)) ||
+      english[0] ||
+      voices[0];
+  }
+
+  if (synth) {
+    pickVoice();
+    // Voice lists load asynchronously in most browsers.
+    if (typeof synth.onvoiceschanged !== "undefined") {
+      synth.addEventListener("voiceschanged", pickVoice);
+    }
+  }
+
+  /* ---------- The portrait ----------
+     Blinks, follows the visitor a little, and moves its jaw while he
+     speaks. Every pixel is the original photograph; nothing is drawn
+     or generated. Motion can be switched off, and is off by default
+     for anyone who asks for reduced motion. */
+
+  const albertStage = document.getElementById("albertStage");
+  const albertMotion = document.getElementById("albertMotion");
+  const albertMotionLabel = document.getElementById("albertMotionLabel");
+  const albertImg = albertStage ? albertStage.querySelector(".albert-frame img") : null;
+
+  let motionOn = !prefersReduced;
+  let blinkTimer = null;
+
+  function setSpeakingFace(on) {
+    if (!albertStage) return;
+    albertStage.classList.toggle("speaking", Boolean(on) && motionOn);
+  }
+
+  function blinkOnce() {
+    if (!albertStage || !motionOn) return;
+    albertStage.classList.add("blink");
+    setTimeout(() => albertStage.classList.remove("blink"), 110);
+  }
+
+  function scheduleBlink() {
+    clearTimeout(blinkTimer);
+    if (!motionOn) return;
+    // Human blink spacing is irregular; anything metronomic reads as a glitch.
+    const wait = 2600 + Math.random() * 4200;
+    blinkTimer = setTimeout(() => {
+      blinkOnce();
+      // Occasional double blink.
+      if (Math.random() < 0.22) setTimeout(blinkOnce, 220);
+      scheduleBlink();
+    }, wait);
+  }
+
+  function setMotion(on) {
+    motionOn = on;
+    if (albertMotion) {
+      albertMotion.setAttribute("aria-pressed", String(on));
+      if (albertMotionLabel) albertMotionLabel.textContent = on ? "Motion on" : "Motion off";
+    }
+    if (!on) {
+      clearTimeout(blinkTimer);
+      if (albertStage) albertStage.classList.remove("blink", "speaking");
+      if (albertImg) albertImg.style.transform = "";
+    } else {
+      scheduleBlink();
+      if (synth && synth.speaking) setSpeakingFace(true);
+    }
+  }
+
+  if (albertMotion) {
+    albertMotion.addEventListener("click", () => setMotion(!motionOn));
+  }
+  if (albertStage) {
+    setMotion(motionOn);
+
+    // A slight turn toward the visitor. Small on purpose: a few pixels
+    // reads as attention, more reads as a puppet.
+    const speakSection = document.getElementById("speak");
+    if (speakSection && window.matchMedia("(pointer: fine)").matches) {
+      speakSection.addEventListener("mousemove", (e) => {
+        if (!motionOn || !albertImg) return;
+        const r = albertStage.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) / window.innerWidth;
+        const dy = (e.clientY - (r.top + r.height / 2)) / window.innerHeight;
+        const x = Math.max(-1, Math.min(1, dx * 2)) * 5;
+        const y = Math.max(-1, Math.min(1, dy * 2)) * 3;
+        albertImg.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(1.03)`;
+      });
+      speakSection.addEventListener("mouseleave", () => {
+        if (albertImg) albertImg.style.transform = "";
+      });
+    }
+  }
+
+  /* The face follows the synthesiser's actual state rather than only
+     its start/end events, which Chrome fires unreliably. A short poll
+     keeps the jaw honest: it moves exactly while he is audibly
+     talking, and stops the moment he is not. */
+  let mouthPoll = null;
+
+  function watchMouth() {
+    clearInterval(mouthPoll);
+    if (!synth) return;
+    mouthPoll = setInterval(() => {
+      const talking = synth.speaking && !synth.paused;
+      setSpeakingFace(talking);
+      if (!talking && !synth.pending) {
+        clearInterval(mouthPoll);
+        mouthPoll = null;
+      }
+    }, 120);
+  }
+
+  function stopSpeaking() {
+    if (synth && (synth.speaking || synth.pending)) synth.cancel();
+    clearInterval(mouthPoll);
+    mouthPoll = null;
+    setSpeakingFace(false);
+  }
+
+  function speak(text) {
+    if (!voiceOn || !synth || !text) return;
+    stopSpeaking();
+    const u = new SpeechSynthesisUtterance(String(text));
+    if (albertVoice) u.voice = albertVoice;
+    u.lang = (albertVoice && albertVoice.lang) || "en-CA";
+    u.rate = 0.94;  // unhurried, the way he talks
+    u.pitch = 0.9;
+    u.volume = 1;
+    u.onstart = () => setSpeakingFace(true);
+    u.onend = () => setSpeakingFace(false);
+    u.onerror = () => setSpeakingFace(false);
+    synth.speak(u);
+    watchMouth();
+  }
+
+  function setVoice(on) {
+    voiceOn = on;
+    if (!chatVoice) return;
+    chatVoice.setAttribute("aria-pressed", String(on));
+    chatVoice.classList.toggle("on", on);
+    if (chatVoiceLabel) chatVoiceLabel.textContent = on ? "Voice on" : "Voice";
+    if (!on) stopSpeaking();
+  }
+
+  if (synth && chatVoice) {
+    chatVoice.hidden = false;
+    chatVoice.addEventListener("click", () => setVoice(!voiceOn));
+  }
+
+  // Never let him keep talking to an empty room.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopSpeaking();
+  });
+  window.addEventListener("pagehide", stopSpeaking);
+
+  /* ---------- Asking out loud ---------- */
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  let recog = null;
+  let listening = false;
+
+  function setListening(on) {
+    listening = on;
+    if (!chatMic) return;
+    chatMic.setAttribute("aria-pressed", String(on));
+    chatMic.classList.toggle("on", on);
+    chatMic.setAttribute("aria-label", on ? "Stop listening" : "Ask out loud");
+  }
+
+  if (SR && chatMic) {
+    chatMic.hidden = false;
+
+    chatMic.addEventListener("click", () => {
+      if (listening) {
+        if (recog) recog.stop();
+        return;
+      }
+
+      stopSpeaking(); // don't transcribe Albert talking over the visitor
+
+      recog = new SR();
+      recog.lang = "en-CA";
+      recog.interimResults = true;
+      recog.continuous = false;
+      recog.maxAlternatives = 1;
+
+      let finalText = "";
+
+      recog.addEventListener("result", (e) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const chunk = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += chunk;
+          else interim += chunk;
+        }
+        if (chatField) chatField.value = (finalText + interim).trim();
+      });
+
+      recog.addEventListener("error", (e) => {
+        setListening(false);
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          addMessage(
+            "albert",
+            "It seems your browser will not let me hear you. Allow microphone access, or simply type your question and I will answer just the same."
+          );
+        }
+      });
+
+      recog.addEventListener("end", () => {
+        setListening(false);
+        const said = (chatField && chatField.value || "").trim();
+        if (said) handleUser(said);
+      });
+
+      try {
+        recog.start();
+        setListening(true);
+      } catch {
+        setListening(false);
+      }
+    });
+  }
+
   // deterministic-ish pick without Math.random reliance issues
   let pickSeed = 7;
   function pick(arr) {
@@ -401,6 +664,7 @@
       typing.msg.remove();
       addMessage("albert", reply);
       history.push({ role: "assistant", content: reply });
+      speak(reply);
       if (topic && topic.follow) renderSuggests(topic.follow);
       else renderSuggests(["mother", "refused", "community", "legacy"]);
       setBusy(false);
@@ -473,6 +737,7 @@
       if (!painted) throw new Error("empty reply");
 
       history.push({ role: "assistant", content: acc });
+      speak(acc);
       rotateSuggests(4);
     } catch (err) {
       if (err && err.name === "AbortError") {
@@ -519,6 +784,7 @@
 
   function greet() {
     if (inFlight) inFlight.abort();
+    stopSpeaking();
     chatLog.innerHTML = "";
     history = [];
     suggestCursor = 0;

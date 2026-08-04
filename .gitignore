@@ -5,6 +5,9 @@
 _shot.html
 *.log
 
+# Browser-testing output
+.playwright-mcp/
+
 # Worker (Cloudflare) build + secrets
 node_modules/
 .wrangler/

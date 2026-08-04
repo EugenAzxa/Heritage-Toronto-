@@ -12,6 +12,8 @@
   <meta property="og:description" content="Spin the globe. Search a name. Every pin is a life, placed where it began." />
   <meta property="og:image" content="assets/stamp.jpg" />
 
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316233F'/%3E%3Cg fill='none' stroke='%23E2C88C' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 11h18v10H7z'/%3E%3Cpath d='m7 12 9 6 9-6'/%3E%3C/g%3E%3C/svg%3E" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -32,7 +34,11 @@
         <em>1857&ndash;1918</em>
       </span>
     </a>
-    <nav class="site-nav" aria-label="Primary">
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav">
+      <span class="nav-toggle-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="sr-only">Menu</span>
+    </button>
+    <nav class="site-nav" id="siteNav" aria-label="Primary">
       <a href="index.html#story">The Story</a>
       <a href="index.html#speak">Speak with Albert</a>
       <a href="index.html#legacy">Legacy</a>
@@ -125,6 +131,7 @@
 
   <!-- globe.gl bundles three.js; loaded from CDN because the site has no build step -->
   <script src="https://unpkg.com/globe.gl@2.34.4/dist/globe.gl.min.js" defer></script>
+  <script src="nav.js" defer></script>
   <script src="people.js" defer></script>
 </body>
 </html>
