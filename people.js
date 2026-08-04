@@ -71,6 +71,9 @@
   let fieldLabel = {};
   let visible = [];
   let activeField = "all";
+  let torontoOnly = false;   // narrow the world view to the Toronto cohort
+  const TORONTO_BOX = (p) =>
+    p.anchor === "died" || /Toronto|Milford, Delaware/.test(p.place || "");
   let selected = null;
   let spinning = !prefersReduced;
   const wikiCache = new Map();
@@ -175,7 +178,10 @@
       const era = parseEra(raw);
       const q = era ? "" : raw;
       visible = people.filter(
-        (p) => (activeField === "all" || p.field === activeField) && matches(p, q, era)
+        (p) =>
+          (activeField === "all" || p.field === activeField) &&
+          (!torontoOnly || p.anchor === "died") &&
+          matches(p, q, era)
       );
     }
 
@@ -192,7 +198,11 @@
   function renderCount() {
     const n = visible.length;
     const total = dataset().length;
-    const noun = isToronto() ? "Heritage Toronto plaques" : "lives on the globe";
+    const noun = isToronto()
+      ? "Heritage Toronto plaques"
+      : torontoOnly
+      ? "lives that ended in Toronto"
+      : "lives on the globe";
     el.count.textContent =
       n === total ? total + " " + noun : n + " of " + total + " shown";
   }
@@ -221,6 +231,25 @@
     };
 
     el.filters.appendChild(make("all", "All"));
+
+    // Toronto is the point of this atlas for Heritage Toronto, so it gets
+    // its own control rather than hiding among the disciplines.
+    const tor = document.createElement("button");
+    tor.type = "button";
+    tor.className = "atlas-chip atlas-chip--toronto";
+    tor.setAttribute("aria-pressed", String(torontoOnly));
+    tor.textContent = "Died in Toronto";
+    tor.addEventListener("click", () => {
+      torontoOnly = !torontoOnly;
+      renderFilters();
+      applyFilters();
+      if (torontoOnly && world) {
+        setSpinning(false);
+        world.pointOfView({ lat: 43.7, lng: -79.4, altitude: 0.75 }, prefersReduced ? 0 : 1200);
+      }
+    });
+    el.filters.appendChild(tor);
+
     fields.forEach((f) => {
       el.filters.appendChild(make(f.id, f.label, FIELD_COLOR[f.id]));
     });
@@ -595,7 +624,7 @@
     if (credit) {
       credit.textContent = isToronto()
         ? "Plaque locations and text from Heritage Toronto's published Exploration Map, a selected set. Albert Jackson's own 2017 plaque is not part of it."
-        : "Coordinates mark the town or district of birth and are approximate. Summaries load live from Wikipedia where a connection is available.";
+        : "Birth pins are approximate to the town or district. Toronto pins sit at the grave where the record gives one, and within the city where it does not. Summaries load live from Wikipedia.";
     }
 
     const title = document.getElementById("atlasTitle");
@@ -606,9 +635,9 @@
         "Every plaque on Heritage Toronto's published Exploration Map, placed on the street where it stands. Search a street, a building or a name.";
       el.query.placeholder = "Search a street, building or name...";
     } else {
-      title.innerHTML = "Every pin<br/>is a beginning";
+      title.innerHTML = "Every pin<br/>is a life";
       lede.textContent =
-        "Albert Jackson's story started in one place and travelled. So did everyone here. Each light on the globe marks where a life began.";
+        "Sixty-eight lives pinned where they began, and two hundred pinned where they ended, in Toronto. Filter to the city and watch it light up.";
       el.query.placeholder = "Search a name, country or century...";
     }
 
