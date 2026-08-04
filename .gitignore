@@ -5,6 +5,20 @@
 _shot.html
 *.log
 
+# Worker (Cloudflare) build + secrets
+node_modules/
+.wrangler/
+.dev.vars
+
+# Local Claude Code config (machine-specific permissions)
+.claude/settings.local.json
+
+# Vendored third-party skill pack (~8 MB). Not part of the site.
+# Reinstall with:
+#   git clone --depth 1 https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+#   cp -r ui-ux-pro-max-skill/.claude/skills/* .claude/skills/
+.claude/skills/
+
 # Raw source photos (large originals; web-ready copies live in /assets)
 *.HEIC
 Albert+jackson.jpg.webp

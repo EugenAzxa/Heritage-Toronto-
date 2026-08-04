@@ -138,25 +138,102 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 /* ============================================================
    HERO
    ============================================================ */
-.hero {
-  position: relative; min-height: 100svh;
-  display: flex; align-items: center;
-  padding: 7rem var(--gutter) 4rem;
-  background:
-    radial-gradient(1200px 700px at 78% 18%, rgba(195,154,80,0.16), transparent 60%),
-    linear-gradient(160deg, var(--parchment) 0%, var(--parchment-2) 100%);
+/* ============================================================
+   SPLIT HERO  -  two ways in, side by side
+   Left pane: Heritage, parchment, daylight.
+   Right pane: Famous People, navy, night, with the globe
+   cropped at the screen edge.
+   ============================================================ */
+.split {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   overflow: hidden;
 }
+
+.split-pane {
+  position: relative;
+  display: flex; align-items: center;
+  padding: clamp(6rem, 11vh, 8.5rem) clamp(1.6rem, 4vw, 4rem) clamp(4.5rem, 9vh, 6rem);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.split-heritage {
+  background:
+    radial-gradient(900px 600px at 30% 15%, rgba(195,154,80,0.18), transparent 62%),
+    linear-gradient(160deg, var(--parchment) 0%, var(--parchment-2) 100%);
+}
+
+.split-world {
+  background:
+    radial-gradient(700px 520px at 70% 42%, rgba(34,51,84,0.75), transparent 70%),
+    linear-gradient(200deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: var(--cream);
+}
+
+/* Brass hairline between the two halves */
+.split-world::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(195,154,80,0.55) 22%, rgba(195,154,80,0.55) 78%, transparent);
+  z-index: 4;
+}
+
 .hero-grain {
   position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
-.hero-inner {
-  position: relative; z-index: 1;
-  width: 100%; max-width: var(--maxw); margin: 0 auto;
-  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(2rem, 5vw, 5rem);
-  align-items: center;
+
+.split-inner {
+  position: relative; z-index: 3;
+  width: 100%; max-width: 34rem; margin-left: auto;
 }
+.split-world .split-inner { margin-left: 0; margin-right: auto; }
+
+/* ---- The cropped half globe ----
+   Deliberately oversized and pushed right so roughly half the
+   sphere sits beyond the viewport edge. */
+.split-globe {
+  position: absolute; z-index: 1;
+  top: 50%; left: 34%;
+  width: 150%; aspect-ratio: 1 / 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.split-globe canvas { display: block; }
+
+/* Shown until (or instead of) the 3D globe: a lit sphere in the
+   same palette, so the pane never looks broken or empty. */
+.split-globe-fallback {
+  position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(195,154,80,0.30), transparent 46%),
+    radial-gradient(circle at 62% 66%, rgba(160,43,34,0.24), transparent 52%),
+    linear-gradient(150deg, #1d3054 0%, #101c31 62%, #0a1220 100%);
+  box-shadow: inset -28px -22px 90px rgba(0,0,0,0.6), 0 0 120px rgba(195,154,80,0.14);
+  opacity: 1; transition: opacity 0.7s var(--ease);
+}
+.split-globe.live .split-globe-fallback { opacity: 0; }
+
+/* Keeps the copy legible over whatever the globe is doing behind it */
+.split-scrim {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(100deg,
+    var(--navy-deep) 0%,
+    rgba(13,21,38,0.92) 26%,
+    rgba(13,21,38,0.55) 48%,
+    rgba(13,21,38,0.08) 72%,
+    transparent 100%);
+}
+
+/* Light-pane variants of the shared hero type */
+.hero-title--light { color: var(--cream); }
+.hero-lede--light  { color: rgba(252,248,239,0.78); }
+.eyebrow--light           { color: var(--brass-light); }
+.eyebrow--light .eyebrow-line { background: var(--brass-light); }
+.hero-facts--light dt { color: var(--brass-light); }
+.hero-facts--light dd { color: rgba(252,248,239,0.66); }
 
 .eyebrow, .section-eyebrow {
   display: flex; align-items: center; gap: 0.8rem;
@@ -167,16 +244,17 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .eyebrow-line { display: inline-block; width: 46px; height: 2px; background: var(--brass); }
 
 .hero-title {
-  font-size: clamp(3.6rem, 9vw, 7rem);
+  /* Sized for a half-width pane, not a full-bleed hero */
+  font-size: clamp(2.7rem, 5.2vw, 4.8rem);
   font-weight: 600; letter-spacing: -0.02em; color: var(--navy);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 .hero-lede {
-  font-size: clamp(1.12rem, 1.7vw, 1.35rem); color: var(--ink-soft);
-  max-width: 34ch; margin: 0 0 2.2rem;
+  font-size: clamp(1.02rem, 1.25vw, 1.18rem); color: var(--ink-soft);
+  max-width: 36ch; margin: 0 0 1.9rem;
 }
 
-.hero-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 2.6rem; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 2.2rem; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 0.55rem;
@@ -190,14 +268,38 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .btn-primary:hover svg { transform: translateX(4px); }
 .btn-ghost { background: transparent; color: var(--navy); box-shadow: inset 0 0 0 1.5px var(--navy); }
 .btn-ghost:hover { background: var(--navy); color: var(--cream); transform: translateY(-2px); }
+/* For the dark half of the split hero */
+.btn-brass { background: var(--brass-light); color: var(--navy-deep); box-shadow: var(--shadow-md); }
+.btn-brass:hover { background: #F0DCAA; transform: translateY(-2px); }
+.btn-brass:hover svg { transform: rotate(28deg); }
 
 .hero-facts { display: flex; gap: clamp(1.2rem, 3vw, 2.6rem); margin: 0; flex-wrap: wrap; }
 .hero-facts div { display: flex; flex-direction: column; }
 .hero-facts dt { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; color: var(--crimson); }
 .hero-facts dd { margin: 0; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-faint); letter-spacing: 0.03em; max-width: 15ch; }
 
-/* Hero art */
-.hero-art { position: relative; display: grid; place-items: center; }
+/* Stamp card, now a floating detail in the bottom corner of the
+   heritage pane. Hidden on narrower screens so the copy can breathe. */
+.split-heritage .stamp-card {
+  position: absolute; z-index: 2;
+  right: clamp(1.5rem, 3vw, 3rem); bottom: clamp(3.5rem, 7vh, 5rem);
+  width: clamp(150px, 15vw, 205px);
+}
+.split-heritage .stamp-card figcaption { display: none; }
+.split-heritage .postmark {
+  position: absolute; z-index: 3;
+  right: clamp(0.6rem, 2vw, 2.1rem); bottom: calc(clamp(3.5rem, 7vh, 5rem) + clamp(150px, 15vw, 205px) - 46px);
+  top: auto;
+  width: 86px; height: 86px;
+}
+.split-heritage .postmark svg { width: 86px; height: 86px; }
+.split-heritage:hover .stamp-card { transform: rotate(-1deg) translateY(-4px); }
+
+@media (max-width: 1180px) {
+  .split-heritage .stamp-card,
+  .split-heritage .postmark { display: none; }
+}
+
 .stamp-card {
   position: relative; margin: 0; max-width: 380px;
   background: var(--cream); padding: 14px 14px 10px; border-radius: 6px;
@@ -215,8 +317,6 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-faint);
   text-align: center; padding: 0.7rem 0.4rem 0.2rem; line-height: 1.4;
 }
-.hero-art:hover .stamp-card { transform: rotate(-1deg) translateY(-4px); }
-
 .postmark {
   position: absolute; top: -26px; right: 2px; color: var(--crimson);
   opacity: 0.72; transform: rotate(12deg);
@@ -225,14 +325,50 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .postmark .pm-top, .postmark .pm-bot { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; fill: currentColor; }
 .postmark .pm-mid { font-family: var(--font-serif); font-size: 20px; font-weight: 700; fill: currentColor; }
 
+/* Sits in the middle of the heritage pane, not on the divider,
+   so it never straddles the light/dark boundary. */
 .scroll-hint {
-  position: absolute; left: 50%; bottom: 1.6rem; transform: translateX(-50%);
+  position: absolute; z-index: 5;
+  left: 25%; bottom: 1.6rem; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
   font-family: var(--font-sans); font-size: 0.72rem; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--ink-faint); text-decoration: none;
+  text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
 }
+.scroll-hint:hover { color: var(--crimson); }
 .scroll-hint svg { animation: bob 1.8s var(--ease) infinite; }
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+/* ---- Split hero, stacked ---- */
+@media (max-width: 860px) {
+  .split { grid-template-columns: 1fr; min-height: 0; }
+  .split-pane { min-height: 88svh; padding-block: clamp(5rem, 14vh, 7rem) clamp(3rem, 8vh, 4.5rem); }
+  .split-world::before {
+    left: 0; right: 0; top: 0; bottom: auto; width: auto; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(195,154,80,0.55) 20%, rgba(195,154,80,0.55) 80%, transparent);
+  }
+  .split-inner, .split-world .split-inner {
+    margin-inline: auto; max-width: 40rem; text-align: center;
+  }
+  .split-inner .eyebrow,
+  .split-inner .hero-actions,
+  .split-inner .hero-facts { justify-content: center; }
+  .split-inner .hero-lede { margin-inline: auto; }
+  /* Centre the sphere behind the copy rather than cropping it at an edge
+     that no longer exists once the panes stack. */
+  .split-globe { left: 50%; top: 46%; width: 118%; transform: translate(-50%, -50%); }
+  .split-scrim {
+    background: linear-gradient(180deg,
+      rgba(13,21,38,0.86) 0%, rgba(13,21,38,0.62) 40%,
+      rgba(13,21,38,0.80) 78%, var(--navy-deep) 100%);
+  }
+  .scroll-hint { left: 50%; }
+}
+
+@media (max-width: 420px) {
+  .hero-title { font-size: 2.5rem; }
+  .hero-facts { gap: 1.1rem; }
+  .hero-facts dt { font-size: 1.45rem; }
+}
 
 /* ============================================================
    THESIS
@@ -373,8 +509,19 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .chat-who strong { font-size: 1.02rem; }
 .chat-who span { font-size: 0.78rem; color: rgba(252,248,239,0.7); display: flex; align-items: center; gap: 0.4rem; margin-top: 2px; }
 .chat-who .dot { width: 7px; height: 7px; border-radius: 50%; background: #6FCF97; box-shadow: 0 0 0 3px rgba(111,207,151,0.25); }
+/* Live / offline badge for the Claude-backed conversation */
+.chat-mode {
+  margin-left: auto; font-family: var(--font-sans); font-size: 0.66rem;
+  font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  padding: 0.3rem 0.6rem; border-radius: 999px; cursor: default;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.chat-mode--live    { color: #BFF0D2; background: rgba(111,207,151,0.16); border-color: rgba(111,207,151,0.45); }
+.chat-mode--offline { color: rgba(252,248,239,0.62); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
+.chat-mode--checking{ color: var(--brass-light); background: rgba(195,154,80,0.16); border-color: rgba(195,154,80,0.4); }
+
 .chat-reset {
-  margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem;
+  margin-left: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem;
   font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600;
   color: rgba(252,248,239,0.8); background: rgba(255,255,255,0.08);
   border: none; padding: 0.45rem 0.75rem; border-radius: 999px; cursor: pointer;
@@ -395,6 +542,8 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .msg-avatar { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1.5px var(--brass); }
 .msg-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: sepia(0.15); }
 .msg-bubble { padding: 0.8rem 1.05rem; border-radius: 16px; font-size: 1.02rem; line-height: 1.55; }
+.msg-bubble p { margin: 0; }
+.msg-bubble p + p { margin-top: 0.7em; }
 
 .msg.albert .msg-bubble { background: var(--parchment); color: var(--ink); border-top-left-radius: 4px; box-shadow: var(--shadow-sm); }
 .msg.albert .msg-bubble em { color: var(--ink-faint); font-style: italic; }
@@ -434,6 +583,9 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   cursor: pointer; transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
 .chat-input button:hover { background: var(--crimson-deep); transform: scale(1.06); }
+.chat-input.busy input { opacity: 0.6; }
+.chat-input.busy button { background: var(--ink-faint); cursor: progress; transform: none; }
+.chat-input button:disabled:hover { background: var(--ink-faint); transform: none; }
 
 .speak-note {
   max-width: 760px; margin: 1.4rem auto 0; text-align: center;
@@ -541,7 +693,7 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .footer-col a { display: block; text-decoration: none; color: rgba(252,248,239,0.8); font-family: var(--font-sans); font-size: 0.95rem; padding: 0.28rem 0; transition: color 0.2s var(--ease); }
 .footer-col a:hover { color: var(--cream); }
 .footer-col p { font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.8rem; color: rgba(252,248,239,0.6); }
-.footer-credit { margin-top: 1rem !important; font-size: 0.8rem !important; color: rgba(252,248,239,0.42) !important; }
+.footer-credit { margin-top: 1rem !important; font-size: 0.8rem !important; color: rgba(252,248,239,0.6) !important; }
 .footer-base {
   max-width: var(--maxw); margin: 0 auto; padding-top: 1.6rem;
   display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
@@ -560,10 +712,8 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
    ============================================================ */
 @media (max-width: 960px) {
   .site-nav { display: none; }
-  .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
-  .eyebrow, .hero-actions, .hero-facts { justify-content: center; }
-  .hero-lede { margin-left: auto; margin-right: auto; }
-  .hero-facts { justify-content: center; }
+  /* Hero copy stays left-aligned here: the split is still two columns
+     until 860px, and centring it mid-column reads as a mistake. */
   .legacy-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { grid-template-columns: 1fr; }

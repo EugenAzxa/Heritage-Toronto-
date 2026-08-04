@@ -235,6 +235,51 @@
   const chatField = document.getElementById("chatField");
   const chatSuggests = document.getElementById("chatSuggests");
   const chatReset = document.getElementById("chatReset");
+  const chatMode = document.getElementById("chatMode");
+
+  /* ---------- Live mode: Claude API via the Worker proxy ----------
+     window.ALBERT_API is set in index.html. When it is missing, the
+     Worker is down, or a request fails, we fall back to the offline
+     keyword knowledge base above so the page never breaks. */
+  const API_BASE = (window.ALBERT_API || "").replace(/\/+$/, "");
+  let liveMode = false;
+  let inFlight = null; // AbortController for the current request
+
+  // Full conversation as sent to Claude. Reset by "Start over".
+  let history = [];
+
+  function setMode(mode) {
+    if (!chatMode) return;
+    const label =
+      mode === "live" ? "Live" : mode === "checking" ? "Connecting" : "Offline";
+    chatMode.textContent = label;
+    chatMode.className = "chat-mode chat-mode--" + mode;
+    chatMode.title =
+      mode === "live"
+        ? "Albert is answering live, grounded in the historical record."
+        : mode === "checking"
+        ? "Reaching Albert..."
+        : "Answering from the built-in record. No connection needed.";
+  }
+
+  async function probeLive() {
+    if (!API_BASE) {
+      setMode("offline");
+      return;
+    }
+    setMode("checking");
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const res = await fetch(API_BASE + "/health", { signal: ctrl.signal });
+      clearTimeout(timer);
+      const data = await res.json();
+      liveMode = Boolean(res.ok && data && data.configured);
+    } catch {
+      liveMode = false;
+    }
+    setMode(liveMode ? "live" : "offline");
+  }
 
   // deterministic-ish pick without Math.random reliance issues
   let pickSeed = 7;
@@ -261,7 +306,24 @@
     return bestScore > 0 ? best : null;
   }
 
-  function addMessage(who, html) {
+  /* ---------- Rendering ---------- */
+
+  // Text only, never innerHTML. Model output and visitor input alike are
+  // set with textContent so there is no markup injection surface at all.
+  function paintText(bubble, text) {
+    bubble.textContent = "";
+    String(text)
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .forEach((para) => {
+        const p = document.createElement("p");
+        p.textContent = para;
+        bubble.appendChild(p);
+      });
+  }
+
+  function addMessage(who, text) {
     const msg = document.createElement("div");
     msg.className = "msg " + who;
 
@@ -279,7 +341,7 @@
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
-    bubble.innerHTML = html;
+    if (text) paintText(bubble, text);
 
     msg.appendChild(avatar);
     msg.appendChild(bubble);
@@ -290,9 +352,22 @@
 
   function showTyping() {
     const { msg, bubble } = addMessage("albert", "");
-    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-    return msg;
+    bubble.innerHTML =
+      '<span class="typing"><span></span><span></span><span></span></span>';
+    return { msg, bubble };
   }
+
+  function setBusy(busy) {
+    if (chatForm) chatForm.classList.toggle("busy", busy);
+    if (chatField) chatField.disabled = busy;
+    const submit = chatForm ? chatForm.querySelector("button[type=submit]") : null;
+    if (submit) submit.disabled = busy;
+  }
+
+  /* Suggestion chips. In offline mode we follow the knowledge base's own
+     follow-up graph; in live mode we rotate through the topic list. */
+  const ALL_TOPIC_IDS = Object.keys(LABELS);
+  let suggestCursor = 0;
 
   function renderSuggests(ids) {
     chatSuggests.innerHTML = "";
@@ -307,37 +382,150 @@
     });
   }
 
-  function albertRespond(topic, userText) {
+  function rotateSuggests(n) {
+    const out = [];
+    for (let i = 0; i < (n || 4); i++) {
+      out.push(ALL_TOPIC_IDS[(suggestCursor + i) % ALL_TOPIC_IDS.length]);
+    }
+    suggestCursor = (suggestCursor + (n || 4)) % ALL_TOPIC_IDS.length;
+    renderSuggests(out);
+  }
+
+  /* ---------- Offline answering (original keyword engine) ---------- */
+
+  function respondOffline(topic) {
     const typing = showTyping();
     const reply = topic ? pick(topic.replies) : pick(FALLBACKS);
     const delay = prefersReduced ? 200 : Math.min(1500, 500 + reply.length * 6);
     setTimeout(() => {
-      typing.remove();
+      typing.msg.remove();
       addMessage("albert", reply);
+      history.push({ role: "assistant", content: reply });
       if (topic && topic.follow) renderSuggests(topic.follow);
       else renderSuggests(["mother", "refused", "community", "legacy"]);
+      setBusy(false);
     }, delay);
   }
 
+  /* ---------- Live answering (Claude, streamed over SSE) ---------- */
+
+  async function respondLive() {
+    const typing = showTyping();
+    let painted = false;
+    let acc = "";
+
+    inFlight = new AbortController();
+
+    try {
+      const res = await fetch(API_BASE + "/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history }),
+        signal: inFlight.signal,
+      });
+
+      if (!res.ok || !res.body) throw new Error("bad response " + res.status);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let failed = null;
+
+      // Parse the SSE frame stream: blocks separated by a blank line.
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let split;
+        while ((split = buffer.indexOf("\n\n")) !== -1) {
+          const frame = buffer.slice(0, split);
+          buffer = buffer.slice(split + 2);
+
+          let event = "message";
+          let data = "";
+          frame.split("\n").forEach((line) => {
+            if (line.startsWith("event:")) event = line.slice(6).trim();
+            else if (line.startsWith("data:")) data += line.slice(5).trim();
+          });
+          if (!data) continue;
+
+          let payload;
+          try {
+            payload = JSON.parse(data);
+          } catch {
+            continue;
+          }
+
+          if (event === "delta" && payload.text) {
+            acc += payload.text;
+            painted = true;
+            paintText(typing.bubble, acc);
+            chatLog.scrollTop = chatLog.scrollHeight;
+          } else if (event === "error") {
+            failed = payload.message || "Something went wrong.";
+          }
+        }
+      }
+
+      if (failed && !painted) throw new Error(failed);
+
+      if (!painted) throw new Error("empty reply");
+
+      history.push({ role: "assistant", content: acc });
+      rotateSuggests(4);
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        typing.msg.remove();
+        return;
+      }
+      // Live attempt failed. Answer from the offline record instead so the
+      // visitor still gets something true, and drop the mode badge.
+      typing.msg.remove();
+      liveMode = false;
+      setMode("offline");
+      const lastUser = [...history].reverse().find((m) => m.role === "user");
+      respondOffline(lastUser ? matchTopic(lastUser.content) : null);
+      return;
+    } finally {
+      inFlight = null;
+    }
+
+    setBusy(false);
+  }
+
+  /* ---------- Turn handling ---------- */
+
   function handleUser(text, forcedTopicId) {
-    const clean = text.trim();
+    const clean = String(text || "").trim();
     if (!clean) return;
-    addMessage("user", escapeHtml(clean));
-    chatField.value = "";
+    if (chatField && chatField.disabled) return; // a turn is already running
+
+    addMessage("user", clean);
+    history.push({ role: "user", content: clean });
+    if (chatField) chatField.value = "";
+    setBusy(true);
+
+    if (liveMode) {
+      respondLive();
+      return;
+    }
+
     let topic = null;
     if (forcedTopicId) topic = KB.find((k) => k.id === forcedTopicId) || null;
     if (!topic) topic = matchTopic(clean);
-    albertRespond(topic, clean);
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    respondOffline(topic);
   }
 
   function greet() {
+    if (inFlight) inFlight.abort();
     chatLog.innerHTML = "";
+    history = [];
+    suggestCursor = 0;
+    setBusy(false);
     const intro = KB.find((k) => k.id === "greeting");
     addMessage("albert", intro.replies[0]);
+    history.push({ role: "assistant", content: intro.replies[0] });
     renderSuggests(["mother", "carrier", "refused", "legacy"]);
   }
 
@@ -348,5 +536,8 @@
     });
   }
   if (chatReset) chatReset.addEventListener("click", greet);
-  if (chatLog) greet();
+  if (chatLog) {
+    greet();
+    probeLive();
+  }
 })();

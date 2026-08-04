@@ -1,0 +1,19 @@
+{
+  "name": "speak-with-albert-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker proxy that lets the Albert Jackson heritage site talk to the Claude API without exposing an API key.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
