@@ -71,9 +71,7 @@
   let fieldLabel = {};
   let visible = [];
   let activeField = "all";
-  let torontoOnly = false;   // narrow the world view to the Toronto cohort
-  const TORONTO_BOX = (p) =>
-    p.anchor === "died" || /Toronto|Milford, Delaware/.test(p.place || "");
+  let torontoOnly = false;   // narrow the world view to the Canadian cohort
   let selected = null;
   let spinning = !prefersReduced;
   const wikiCache = new Map();
@@ -201,7 +199,7 @@
     const noun = isToronto()
       ? "Heritage Toronto plaques"
       : torontoOnly
-      ? "lives that ended in Toronto"
+      ? "lives that ended in Canada"
       : "lives on the globe";
     el.count.textContent =
       n === total ? total + " " + noun : n + " of " + total + " shown";
@@ -238,14 +236,15 @@
     tor.type = "button";
     tor.className = "atlas-chip atlas-chip--toronto";
     tor.setAttribute("aria-pressed", String(torontoOnly));
-    tor.textContent = "Died in Toronto";
+    tor.textContent = "Died in Canada";
     tor.addEventListener("click", () => {
       torontoOnly = !torontoOnly;
       renderFilters();
       applyFilters();
       if (torontoOnly && world) {
         setSpinning(false);
-        world.pointOfView({ lat: 43.7, lng: -79.4, altitude: 0.75 }, prefersReduced ? 0 : 1200);
+        world.pointOfView({ lat: 51, lng: -95, altitude: 1.15 }, prefersReduced ? 0 : 1200);
+        setTimeout(stylePoints, prefersReduced ? 10 : 1300);
       }
     });
     el.filters.appendChild(tor);
@@ -624,7 +623,7 @@
     if (credit) {
       credit.textContent = isToronto()
         ? "Plaque locations and text from Heritage Toronto's published Exploration Map, a selected set. Albert Jackson's own 2017 plaque is not part of it."
-        : "Birth pins are approximate to the town or district. Toronto pins sit at the grave where the record gives one, and within the city where it does not. Summaries load live from Wikipedia.";
+        : "Birth pins are approximate to the town or district. Canadian pins sit at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. Summaries load live from Wikipedia.";
     }
 
     const title = document.getElementById("atlasTitle");
@@ -637,7 +636,7 @@
     } else {
       title.innerHTML = "Every pin<br/>is a life";
       lede.textContent =
-        "Sixty-eight lives pinned where they began, and two hundred pinned where they ended, in Toronto. Filter to the city and watch it light up.";
+        "Sixty-eight lives pinned where they began, and five hundred more pinned where they ended, across Canada. Zoom in and the crowds come apart.";
       el.query.placeholder = "Search a name, country or century...";
     }
 
@@ -645,6 +644,8 @@
     el.map.hidden = !isToronto();
     el.globe.hidden = isToronto();
     el.spin.hidden = isToronto();
+    const zoomGroup = document.getElementById("atlasZoom");
+    if (zoomGroup) zoomGroup.hidden = isToronto();   // Leaflet has its own
 
     if (isToronto()) {
       buildMap();
@@ -667,18 +668,63 @@
     }
   }
 
-  /* Point sizing differs by an order of magnitude between a world of
-     birthplaces and 312 plaques inside one city. */
+  /* Pins are sized in degrees of arc, so a radius that reads well from
+     orbit becomes a blob up close. Scale it with camera altitude, which
+     is what lets a crowded city separate as you zoom in. */
+  function currentAltitude() {
+    try {
+      const pov = world && world.pointOfView();
+      return pov && isFinite(pov.altitude) ? pov.altitude : 2.2;
+    } catch {
+      return 2.2;
+    }
+  }
+
+  /* Square root, not linear: scaling straight with altitude shrinks pins
+     as fast as the view magnifies, so they never get easier to hit. This
+     lets a cluster separate while each pin stays clickable. */
+  function pinScale() {
+    const alt = currentAltitude();
+    return Math.max(0.16, Math.min(1, Math.sqrt(alt / 2.2)));
+  }
+
   function stylePoints() {
     if (!world) return;
+    const k = pinScale();
     world
       .pointColor((p) => (isToronto() ? PLAQUE_COLOR : colorFor(p)))
-      .pointAltitude((p) =>
-        selected && sameEntry(selected, p) ? (isToronto() ? 0.012 : 0.09) : isToronto() ? 0.004 : 0.035
-      )
-      .pointRadius((p) =>
-        selected && sameEntry(selected, p) ? (isToronto() ? 0.06 : 0.42) : isToronto() ? 0.042 : 0.3
-      );
+      .pointAltitude((p) => (selected && sameEntry(selected, p) ? 0.09 * k : 0.035 * k))
+      .pointRadius((p) => (selected && sameEntry(selected, p) ? 0.42 * k : 0.3 * k));
+  }
+
+  /* Re-scale while the visitor zooms, but only when the altitude has
+     moved enough to matter: the change event fires every frame. */
+  function watchZoom() {
+    const controls = world && world.controls();
+    if (!controls) return;
+    let last = currentAltitude();
+    let queued = false;
+    controls.addEventListener("change", () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        const now = currentAltitude();
+        if (Math.abs(now - last) / Math.max(last, 0.001) > 0.06) {
+          last = now;
+          stylePoints();
+        }
+      });
+    });
+  }
+
+  function zoomBy(factor) {
+    if (!world) return;
+    setSpinning(false);
+    const pov = world.pointOfView();
+    const alt = Math.max(0.03, Math.min(4.5, pov.altitude * factor));
+    world.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: alt }, prefersReduced ? 0 : 420);
+    setTimeout(stylePoints, prefersReduced ? 10 : 460);
   }
 
   function setSpinning(on) {
@@ -794,11 +840,14 @@
       // impossible. Allow it close enough to read a neighbourhood.
       controls.minDistance = 102;
       controls.maxDistance = 620;
+      controls.enableZoom = true;
+      controls.zoomSpeed = 0.8;
       // Any manual interaction stops the drift.
       controls.addEventListener("start", () => {
         if (spinning) setSpinning(false);
       });
     }
+    watchZoom();
 
     stylePoints();
     sizeGlobe();
@@ -838,6 +887,11 @@
     });
 
     el.spin.addEventListener("click", () => setSpinning(!spinning));
+
+    const zin = document.getElementById("atlasZoomIn");
+    const zout = document.getElementById("atlasZoomOut");
+    if (zin) zin.addEventListener("click", () => zoomBy(0.6));
+    if (zout) zout.addEventListener("click", () => zoomBy(1 / 0.6));
 
     document.getElementById("modeWorld").addEventListener("click", () => setMode("world"));
     document.getElementById("modeToronto").addEventListener("click", () => setMode("toronto"));

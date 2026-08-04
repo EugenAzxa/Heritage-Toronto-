@@ -57,7 +57,7 @@
       <div class="atlas-intro">
         <p class="atlas-eyebrow"><span class="eyebrow-line"></span>Atlas of Lives</p>
         <h1 class="atlas-title" id="atlasTitle">Every pin<br/>is a life</h1>
-        <p class="atlas-lede" id="atlasLede">Sixty-eight lives pinned where they began, and two hundred pinned where they ended, in Toronto. Filter to the city and watch it light up.</p>
+        <p class="atlas-lede" id="atlasLede">Sixty-eight lives pinned where they began, and five hundred more pinned where they ended, across Canada. Zoom in and the crowds come apart.</p>
       </div>
 
       <div class="atlas-modes" role="group" aria-label="Choose a map">
@@ -88,7 +88,7 @@
 
       <ul class="atlas-list" id="atlasList" aria-label="People on the globe"></ul>
 
-      <p class="atlas-credit" id="atlasCredit">Birth pins are approximate to the town or district. Toronto pins sit at the grave where the record gives one, and within the city where it does not. Summaries load live from Wikipedia.</p>
+      <p class="atlas-credit" id="atlasCredit">Birth pins are approximate to the town or district. Canadian pins sit at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. Summaries load live from Wikipedia.</p>
     </aside>
 
     <!-- ============ GLOBE ============ -->
@@ -114,6 +114,14 @@
       <div class="atlas-tooltip" id="atlasTooltip" aria-hidden="true"></div>
 
       <div class="atlas-controls">
+        <div class="atlas-zoom" id="atlasZoom" role="group" aria-label="Zoom the globe">
+          <button type="button" class="atlas-ctrl atlas-ctrl--icon" id="atlasZoomIn" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </button>
+          <button type="button" class="atlas-ctrl atlas-ctrl--icon" id="atlasZoomOut" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+        </div>
         <button type="button" class="atlas-ctrl" id="atlasSpin" aria-pressed="true" title="Pause or resume rotation">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
           <span id="atlasSpinLabel">Pause</span>

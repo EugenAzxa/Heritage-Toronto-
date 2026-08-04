@@ -312,6 +312,9 @@
 }
 .atlas-ctrl:hover { background: var(--crimson); border-color: var(--crimson); color: #fff; }
 
+.atlas-zoom { display: inline-flex; gap: 0.3rem; }
+.atlas-ctrl--icon { padding: 0.6rem; width: 40px; justify-content: center; }
+
 /* ---------- Detail card ---------- */
 /* `display: flex` below would otherwise beat the browser's
    [hidden] { display: none }, leaving an empty card on first paint. */
