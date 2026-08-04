@@ -40,6 +40,7 @@
   /* ---------- DOM ---------- */
   const el = {
     globe: document.getElementById("globe"),
+    map: document.getElementById("atlasMap"),
     loading: document.getElementById("atlasLoading"),
     tooltip: document.getElementById("atlasTooltip"),
     search: document.getElementById("atlasSearch"),
@@ -74,7 +75,31 @@
   let spinning = !prefersReduced;
   const wikiCache = new Map();
 
+  /* Two datasets share one globe: lives across the world, and Heritage
+     Toronto's plaques across one city. The plaque file is ~280KB, so it
+     is fetched only when someone actually asks for it. */
+  let mode = "world";            // "world" | "toronto"
+  let plaques = null;            // null until first loaded
+  let plaqueMeta = null;
+  const TORONTO_VIEW = { lat: 43.705, lng: -79.39, altitude: 0.028 };
+  const PLAQUE_COLOR = "#C39A50";
+
+  const isToronto = () => mode === "toronto";
+  const dataset = () => (isToronto() ? plaques || [] : people);
+
   /* ---------- Helpers ---------- */
+
+  // Plaques have no id; identity is name plus position.
+  function sameEntry(a, b) {
+    if (!a || !b) return false;
+    if (a.id && b.id) return a.id === b.id;
+    return a.name === b.name && a.lat === b.lat && a.lng === b.lng;
+  }
+
+  function firstLine(text) {
+    const s = String(text || "").replace(/\s+/g, " ").trim();
+    return s.length > 74 ? s.slice(0, 74).trimEnd() + "..." : s;
+  }
 
   function yearText(p) {
     const fmt = (y) => (y < 0 ? Math.abs(y) + " BCE" : String(y));
@@ -116,6 +141,11 @@
     return null;
   }
 
+  function matchesPlaque(p, q) {
+    if (!q) return true;
+    return (p.name + " " + p.text).toLowerCase().indexOf(q) !== -1;
+  }
+
   function matches(p, q, era) {
     if (era) {
       const from = p.born != null ? p.born : -9999;
@@ -138,17 +168,22 @@
 
   function applyFilters() {
     const raw = (el.query.value || "").trim().toLowerCase();
-    const era = parseEra(raw);
-    const q = era ? "" : raw;
 
-    visible = people.filter(
-      (p) => (activeField === "all" || p.field === activeField) && matches(p, q, era)
-    );
+    if (isToronto()) {
+      visible = (plaques || []).filter((p) => matchesPlaque(p, raw));
+    } else {
+      const era = parseEra(raw);
+      const q = era ? "" : raw;
+      visible = people.filter(
+        (p) => (activeField === "all" || p.field === activeField) && matches(p, q, era)
+      );
+    }
 
     el.clear.hidden = !raw;
     renderCount();
     renderList();
-    if (world) world.pointsData(visible);
+    if (isToronto()) paintMarkers();
+    else if (world) world.pointsData(visible);
     // If the open card is now filtered out, leave it; the visitor asked for it.
   }
 
@@ -156,11 +191,10 @@
 
   function renderCount() {
     const n = visible.length;
-    const total = people.length;
+    const total = dataset().length;
+    const noun = isToronto() ? "Heritage Toronto plaques" : "lives on the globe";
     el.count.textContent =
-      n === total
-        ? total + " lives on the globe"
-        : n + " of " + total + " shown";
+      n === total ? total + " " + noun : n + " of " + total + " shown";
   }
 
   function renderFilters() {
@@ -198,7 +232,9 @@
     if (!visible.length) {
       const li = document.createElement("li");
       li.className = "atlas-empty";
-      li.textContent = "No one here by that name. Try a country, a field, or a century.";
+      li.textContent = isToronto()
+        ? "No plaque matches that. Try a street, a building, or a name."
+        : "No one here by that name. Try a country, a field, or a century.";
       el.list.appendChild(li);
       return;
     }
@@ -210,11 +246,11 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "atlas-item" + (p.home ? " is-home" : "");
-      if (selected && selected.id === p.id) btn.setAttribute("aria-current", "true");
+      if (selected && sameEntry(selected, p)) btn.setAttribute("aria-current", "true");
 
       const pip = document.createElement("span");
       pip.className = "pip";
-      pip.style.background = colorFor(p);
+      pip.style.background = isToronto() ? PLAQUE_COLOR : colorFor(p);
 
       const who = document.createElement("span");
       who.className = "who";
@@ -225,7 +261,9 @@
 
       const mt = document.createElement("span");
       mt.className = "mt";
-      mt.textContent = [yearText(p), p.place].filter(Boolean).join("  ·  ");
+      mt.textContent = isToronto()
+        ? firstLine(p.text)
+        : [yearText(p), p.place].filter(Boolean).join("  ·  ");
 
       who.appendChild(nm);
       who.appendChild(mt);
@@ -241,7 +279,44 @@
 
   /* ---------- Rendering: detail card ---------- */
 
+  function renderPlaqueCard(p) {
+    el.cardField.textContent = "Heritage Toronto plaque";
+    el.cardField.style.color = PLAQUE_COLOR;
+    el.cardName.textContent = p.name;
+    el.cardMeta.textContent = p.lat.toFixed(5) + ", " + p.lng.toFixed(5);
+
+    // The plaque's own words are the content; there is nothing to fetch.
+    el.cardBlurb.textContent = "";
+    el.thumb.hidden = true;
+    el.thumbImg.removeAttribute("src");
+
+    el.cardWiki.innerHTML = "";
+    String(p.text || "")
+      .split(/\n{1,}/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((para) => {
+        const el2 = document.createElement("p");
+        el2.textContent = para;
+        el.cardWiki.appendChild(el2);
+      });
+    const src = document.createElement("span");
+    src.className = "src";
+    src.textContent = "Plaque text, Heritage Toronto";
+    el.cardWiki.appendChild(src);
+
+    el.cardLink.href =
+      "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lng;
+    el.cardLink.firstChild.textContent = "Open in Google Maps ";
+
+    el.card.hidden = false;
+    const body = el.card.querySelector(".atlas-card-body");
+    if (body) body.scrollTop = 0;
+  }
+
   function renderCard(p) {
+    if (isToronto()) return renderPlaqueCard(p);
+    el.cardLink.firstChild.textContent = "Read more on Wikipedia ";
     el.cardField.textContent = fieldLabel[p.field] || "";
     el.cardField.style.color = colorFor(p);
     el.cardName.textContent = p.name;
@@ -274,7 +349,7 @@
 
     const paint = (data) => {
       // Ignore a late response for a person the visitor has moved past.
-      if (!selected || selected.id !== p.id) return;
+      if (!selected || !sameEntry(selected, p)) return;
       el.cardWiki.innerHTML = "";
 
       if (!data) {
@@ -346,17 +421,235 @@
     renderCard(p);
     renderList();
 
-    if (!world) return;
+    if (isToronto()) {
+      highlightMarker();
+      if (fly && lmap) {
+        lmap.setView([p.lat, p.lng], Math.max(lmap.getZoom(), 16), {
+          animate: !prefersReduced,
+        });
+      }
+      return;
+    }
 
+    if (!world) return;
     world.ringsData([p]);
+    stylePoints();
 
     if (fly) {
       setSpinning(false);
-      world.pointOfView(
-        { lat: p.lat, lng: p.lng, altitude: 1.55 },
-        prefersReduced ? 0 : 1000
-      );
+      world.pointOfView({ lat: p.lat, lng: p.lng, altitude: 1.55 }, prefersReduced ? 0 : 1000);
     }
+  }
+
+  /* ---------- Toronto street map ----------
+     Leaflet is fetched on first use only, so visitors who never open
+     the Toronto view never download it. */
+
+  let lmap = null;
+  let markerLayer = null;
+  const markerFor = new Map();
+
+  function loadAsset(tag, attrs) {
+    return new Promise((resolve, reject) => {
+      const node = document.createElement(tag);
+      Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+      node.onload = resolve;
+      node.onerror = () => reject(new Error("failed: " + (attrs.src || attrs.href)));
+      document.head.appendChild(node);
+    });
+  }
+
+  async function ensureLeaflet() {
+    if (window.L) return true;
+    try {
+      await loadAsset("link", {
+        rel: "stylesheet",
+        href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+      });
+      await loadAsset("script", {
+        src: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+      });
+      return Boolean(window.L);
+    } catch {
+      return false;
+    }
+  }
+
+  function buildMap() {
+    if (lmap) return;
+    const L = window.L;
+    lmap = L.map(el.map, {
+      center: [43.68, -79.38],
+      zoom: 12,
+      minZoom: 10,
+      maxZoom: 18,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {
+        subdomains: "abcd",
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>. Plaque data: Heritage Toronto.',
+      }
+    ).addTo(lmap);
+
+    markerLayer = L.layerGroup().addTo(lmap);
+  }
+
+  function paintMarkers() {
+    if (!lmap || !window.L) return;
+    const L = window.L;
+    markerLayer.clearLayers();
+    markerFor.clear();
+
+    visible.forEach((p) => {
+      const m = L.circleMarker([p.lat, p.lng], {
+        radius: 6,
+        className: "plaque-pin",
+        color: "#0D1526",
+        weight: 1.4,
+        fillColor: PLAQUE_COLOR,
+        fillOpacity: 0.92,
+      });
+      m.bindTooltip(p.name, { direction: "top", offset: [0, -6] });
+      m.on("click", () => select(p, false));
+      m.addTo(markerLayer);
+      markerFor.set(entryKey(p), m);
+    });
+
+    highlightMarker();
+  }
+
+  function highlightMarker() {
+    markerFor.forEach((m, key) => {
+      const on = selected && entryKey(selected) === key;
+      m.setStyle({
+        fillColor: on ? "#A02B22" : PLAQUE_COLOR,
+        radius: on ? 9 : 6,
+        weight: on ? 2 : 1.4,
+      });
+      if (on) m.bringToFront();
+    });
+  }
+
+  const entryKey = (p) => p.name + "|" + p.lat + "|" + p.lng;
+
+  /* ---------- World / Toronto ---------- */
+
+  async function loadPlaques() {
+    if (plaques) return true;
+    const btn = document.getElementById("modeToronto");
+    if (btn) btn.classList.add("is-loading");
+    try {
+      const res = await fetch("data/plaques.json");
+      if (!res.ok) throw new Error("plaques " + res.status);
+      const data = await res.json();
+      plaques = Array.isArray(data.plaques) ? data.plaques : [];
+      plaqueMeta = data;
+      plaques.sort((a, b) => a.name.localeCompare(b.name));
+      return true;
+    } catch {
+      plaques = null;
+      return false;
+    } finally {
+      if (btn) btn.classList.remove("is-loading");
+    }
+  }
+
+  async function setMode(next) {
+    if (next === mode) return;
+
+    if (next === "toronto") {
+      const [gotData, gotLeaflet] = await Promise.all([loadPlaques(), ensureLeaflet()]);
+      if (!gotData || !gotLeaflet) {
+        el.count.textContent = gotData
+          ? "The map library could not be reached."
+          : "The plaque data could not be loaded.";
+        return;
+      }
+    }
+
+    mode = next;
+    selected = null;
+    el.card.hidden = true;
+    el.query.value = "";
+    activeField = "all";
+    if (world) world.ringsData([]);
+
+    document.getElementById("modeWorld").classList.toggle("is-on", !isToronto());
+    document.getElementById("modeWorld").setAttribute("aria-pressed", String(!isToronto()));
+    document.getElementById("modeToronto").classList.toggle("is-on", isToronto());
+    document.getElementById("modeToronto").setAttribute("aria-pressed", String(isToronto()));
+
+    // Fields only mean something for the people dataset.
+    el.filters.hidden = isToronto();
+
+    const homeLabel = document.getElementById("atlasHomeLabel");
+    if (homeLabel) homeLabel.textContent = isToronto() ? "Toronto" : "Albert";
+
+    const credit = document.getElementById("atlasCredit");
+    if (credit) {
+      credit.textContent = isToronto()
+        ? "Plaque locations and text from Heritage Toronto's published Exploration Map, a selected set. Albert Jackson's own 2017 plaque is not part of it."
+        : "Coordinates mark the town or district of birth and are approximate. Summaries load live from Wikipedia where a connection is available.";
+    }
+
+    const title = document.getElementById("atlasTitle");
+    const lede = document.getElementById("atlasLede");
+    if (isToronto()) {
+      title.textContent = "The city, plaque by plaque";
+      lede.textContent =
+        "Every plaque on Heritage Toronto's published Exploration Map, placed on the street where it stands. Search a street, a building or a name.";
+      el.query.placeholder = "Search a street, building or name...";
+    } else {
+      title.innerHTML = "Every pin<br/>is a beginning";
+      lede.textContent =
+        "Albert Jackson's story started in one place and travelled. So did everyone here. Each light on the globe marks where a life began.";
+      el.query.placeholder = "Search a name, country or century...";
+    }
+
+    // Swap the instrument: globe for the world, street map for the city.
+    el.map.hidden = !isToronto();
+    el.globe.hidden = isToronto();
+    el.spin.hidden = isToronto();
+
+    if (isToronto()) {
+      buildMap();
+      // Leaflet needs a size recalculation once its container is visible.
+      requestAnimationFrame(() => {
+        lmap.invalidateSize();
+        lmap.setView([43.68, -79.38], 12, { animate: false });
+      });
+    }
+
+    renderFilters();
+    applyFilters();
+
+    if (!isToronto()) {
+      stylePoints();
+      setSpinning(false);
+      if (world) {
+        world.pointOfView({ lat: 22, lng: -40, altitude: 2.2 }, prefersReduced ? 0 : 1400);
+      }
+    }
+  }
+
+  /* Point sizing differs by an order of magnitude between a world of
+     birthplaces and 312 plaques inside one city. */
+  function stylePoints() {
+    if (!world) return;
+    world
+      .pointColor((p) => (isToronto() ? PLAQUE_COLOR : colorFor(p)))
+      .pointAltitude((p) =>
+        selected && sameEntry(selected, p) ? (isToronto() ? 0.012 : 0.09) : isToronto() ? 0.004 : 0.035
+      )
+      .pointRadius((p) =>
+        selected && sameEntry(selected, p) ? (isToronto() ? 0.06 : 0.42) : isToronto() ? 0.042 : 0.3
+      );
   }
 
   function setSpinning(on) {
@@ -379,7 +672,9 @@
     const b = document.createElement("b");
     b.textContent = p.name;
     const s = document.createElement("span");
-    s.textContent = [yearText(p), p.place].filter(Boolean).join("  ·  ");
+    s.textContent = isToronto()
+      ? firstLine(p.text)
+      : [yearText(p), p.place].filter(Boolean).join("  ·  ");
     el.tooltip.appendChild(b);
     el.tooltip.appendChild(s);
     el.tooltip.classList.add("on");
@@ -447,9 +742,6 @@
       .pointsData(visible)
       .pointLat("lat")
       .pointLng("lng")
-      .pointColor(colorFor)
-      .pointAltitude((p) => (selected && selected.id === p.id ? 0.09 : 0.035))
-      .pointRadius((p) => (selected && selected.id === p.id ? 0.42 : 0.3))
       .pointsTransitionDuration(300)
       .pointLabel(() => "") // custom HTML tooltip instead of the built-in one
       .onPointHover((p, prev, event) => showTooltip(p, event))
@@ -468,7 +760,10 @@
       controls.autoRotateSpeed = 0.32;
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.minDistance = 160;
+      // The globe's radius is 100 units, so a minDistance of 160 clamped
+      // the camera at roughly altitude 0.6 and made city-scale zoom
+      // impossible. Allow it close enough to read a neighbourhood.
+      controls.minDistance = 102;
       controls.maxDistance = 620;
       // Any manual interaction stops the drift.
       controls.addEventListener("start", () => {
@@ -476,6 +771,7 @@
       });
     }
 
+    stylePoints();
     sizeGlobe();
 
     // Open on Albert's birthplace, the thread that ties the two pages together.
@@ -514,7 +810,14 @@
 
     el.spin.addEventListener("click", () => setSpinning(!spinning));
 
+    document.getElementById("modeWorld").addEventListener("click", () => setMode("world"));
+    document.getElementById("modeToronto").addEventListener("click", () => setMode("toronto"));
+
     el.home.addEventListener("click", () => {
+      if (isToronto()) {
+        if (lmap) lmap.setView([43.68, -79.38], 12, { animate: !prefersReduced });
+        return;
+      }
       const albert = people.find((p) => p.home);
       if (albert) select(albert, true);
     });
@@ -534,7 +837,10 @@
     window.addEventListener("resize", () => {
       syncHeaderHeight();
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(sizeGlobe, 120);
+      resizeTimer = setTimeout(() => {
+        sizeGlobe();
+        if (lmap) lmap.invalidateSize();
+      }, 120);
     });
   }
 
