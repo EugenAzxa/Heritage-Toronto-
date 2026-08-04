@@ -526,22 +526,46 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
    redrawn, recoloured, or generated. */
 .albert-stage { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
 
-/* A mounted archival print. The photograph carries its own oval
-   vignette, so the mount stays a plain rectangle rather than adding
-   a competing arch. */
+/* A mounted archival print, shown whole. The frame matches the
+   photograph's own 400x680 aspect exactly, so every overlay
+   percentage below maps 1:1 onto the image. Cropping it was what
+   put the blink above his eyes. */
 .albert-frame {
-  position: relative; width: 100%; aspect-ratio: 400 / 545;
+  position: relative; width: 100%; aspect-ratio: 400 / 680;
   border-radius: 10px;
   overflow: hidden; isolation: isolate;
   background: #EFEAE0;
   box-shadow: 0 0 0 1px rgba(195,154,80,0.5), var(--shadow-lg);
 }
-.albert-frame img,
-.albert-jaw,
-.albert-lid {
+.albert-frame img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: center 22%;
+  object-fit: cover; object-position: center center;
   filter: sepia(0.18) contrast(1.04);
+}
+
+/* Outer span = the fixed window (carries the mask).
+   Inner <i>  = the same photograph, free to move inside it. */
+.albert-jaw,
+.albert-lid { position: absolute; inset: 0; pointer-events: none; }
+.albert-jaw > i,
+.albert-lid > i {
+  position: absolute; inset: 0; display: block;
+  background-image: url("assets/portrait-1882.jpg");
+  background-size: 100% 100%;   /* frame aspect matches the photo exactly */
+  filter: sepia(0.18) contrast(1.04);
+}
+
+/* Calibration markers, only with ?debug=face in the URL. */
+.face-marker {
+  position: absolute; z-index: 9; width: 10px; height: 10px;
+  margin: -5px 0 0 -5px; border-radius: 50%;
+  background: #29F; box-shadow: 0 0 0 1.5px #fff;
+  pointer-events: none;
+}
+.face-marker::after {
+  content: attr(data-label); position: absolute; left: 12px; top: -4px;
+  font: 700 9px/1 var(--font-sans); color: #29F;
+  background: #fff; padding: 2px 4px; border-radius: 3px; white-space: nowrap;
 }
 .albert-frame img {
   transition: transform 0.5s var(--ease);
@@ -555,36 +579,37 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   pointer-events: none;
 }
 
-/* Jaw: the mouth region, softly masked, nudged down while speaking */
+/* Jaw: the mouth region, softly masked, nudged down while speaking.
+   Coordinates are fractions of the photograph itself (see FACE below
+   in script.js, which is the single source of truth for them). */
 .albert-jaw {
-  -webkit-mask-image: radial-gradient(ellipse 20% 9% at 50% 50%, #000 38%, transparent 74%);
-          mask-image: radial-gradient(ellipse 20% 9% at 50% 50%, #000 38%, transparent 74%);
-  transform-origin: 50% 41%;
-  transform: scaleY(1);
+  -webkit-mask-image: radial-gradient(ellipse 11% 4.6% at 49% 50.2%, #000 42%, transparent 78%);
+          mask-image: radial-gradient(ellipse 11% 4.6% at 49% 50.2%, #000 42%, transparent 78%);
   opacity: 0;
 }
-.albert-stage.speaking .albert-jaw {
-  opacity: 1;
-  animation: albertSpeak 320ms ease-in-out infinite alternate;
+.albert-jaw > i { transform-origin: 49% 42%; }
+.albert-stage.speaking .albert-jaw { opacity: 1; }
+.albert-stage.speaking .albert-jaw > i {
+  animation: albertSpeak 300ms ease-in-out infinite alternate;
 }
+/* The chin drops inside a fixed mouth window: the jaw moves, not the frame. */
 @keyframes albertSpeak {
-  from { transform: scaleY(1)     translateY(0);     }
-  to   { transform: scaleY(1.055) translateY(0.7%); }
+  from { transform: translateY(0)    scaleY(1);     }
+  to   { transform: translateY(0.9%) scaleY(1.05);  }
 }
 
 /* Lids: brow skin from just above each eye, flashed over it */
-.albert-lid {
-  transform: translateY(-3.1%);
-  opacity: 0;
-  transition: opacity 70ms linear;
-}
+.albert-lid { opacity: 0; transition: opacity 70ms linear; }
+/* Shifting the photo DOWN inside a fixed eye-shaped window brings the
+   brow skin from just above the eye across it. That is the blink. */
+.albert-lid > i { transform: translateY(2.9%); }
 .albert-lid--l {
-  -webkit-mask-image: radial-gradient(ellipse 9% 4.2% at 43% 37%, #000 45%, transparent 78%);
-          mask-image: radial-gradient(ellipse 9% 4.2% at 43% 37%, #000 45%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 6% 2% at 44.2% 36.3%, #000 50%, transparent 82%);
+          mask-image: radial-gradient(ellipse 6% 2% at 44.2% 36.3%, #000 50%, transparent 82%);
 }
 .albert-lid--r {
-  -webkit-mask-image: radial-gradient(ellipse 9% 4.2% at 57.5% 37%, #000 45%, transparent 78%);
-          mask-image: radial-gradient(ellipse 9% 4.2% at 57.5% 37%, #000 45%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 6% 2% at 58.5% 36%, #000 50%, transparent 82%);
+          mask-image: radial-gradient(ellipse 6% 2% at 58.5% 36%, #000 50%, transparent 82%);
 }
 .albert-stage.blink .albert-lid { opacity: 1; }
 
@@ -596,6 +621,67 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 }
 .albert-stage.speaking .albert-halo {
   box-shadow: inset 0 0 46px 6px rgba(195,154,80,0.28);
+}
+
+/* ---- Press-him hotspots ----
+   Invisible until hovered or focused, so the portrait reads as a
+   photograph first and an interface second. */
+.albert-spot {
+  position: absolute; z-index: 6;
+  left: var(--x); top: var(--y);
+  width: var(--w); height: var(--h);
+  transform: translate(-50%, -50%);
+  padding: 0; cursor: pointer;
+  background: transparent;
+  border: 1.5px solid transparent; border-radius: 14px;
+  /* The label is for screen readers and the tooltip, not for display */
+  font-size: 0; color: transparent;
+  transition: background 0.22s var(--ease), border-color 0.22s var(--ease),
+              box-shadow 0.22s var(--ease);
+}
+.albert-spot:hover,
+.albert-spot:focus-visible {
+  background: rgba(195, 154, 80, 0.16);
+  border-color: rgba(226, 200, 140, 0.85);
+  box-shadow: 0 0 22px rgba(195, 154, 80, 0.35);
+  outline: none;
+}
+/* Tooltip drawn from data-hint */
+.albert-spot::after {
+  content: attr(data-hint);
+  position: absolute; left: 50%; bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  padding: 0.3rem 0.55rem; border-radius: 7px;
+  background: rgba(13, 21, 38, 0.94); color: var(--cream);
+  border: 1px solid rgba(195, 154, 80, 0.45);
+  font: 600 0.68rem/1.2 var(--font-sans); letter-spacing: 0.02em;
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s var(--ease);
+}
+.albert-spot:hover::after,
+.albert-spot:focus-visible::after { opacity: 1; }
+
+/* A single slow pulse on the coat, so visitors know he can be pressed */
+.albert-stage .albert-spot[data-topic="uniform"]:nth-of-type(3)::before {
+  content: ""; position: absolute; inset: 0; border-radius: 14px;
+  border: 1.5px solid rgba(226, 200, 140, 0.5);
+  animation: spotHint 3.4s var(--ease) infinite;
+  pointer-events: none;
+}
+@keyframes spotHint {
+  0%, 72%, 100% { opacity: 0; transform: scale(0.96); }
+  84%           { opacity: 1; transform: scale(1);    }
+}
+.albert-stage:hover .albert-spot::before { animation: none; opacity: 0; }
+
+.albert-prompt-hint {
+  margin: 0; font-family: var(--font-sans); font-size: 0.68rem;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: rgba(252, 248, 239, 0.6); text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .albert-stage .albert-spot::before { animation: none; }
 }
 
 .albert-stage figcaption {

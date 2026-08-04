@@ -192,6 +192,15 @@
       follow: ["mother", "community", "legacy"]
     },
     {
+      id: "uniform",
+      keys: ["uniform", "coat", "tunic", "buttons", "collar", "numerals", "number on your collar", "badge", "dress", "clothes", "wearing", "photograph", "picture", "portrait", "cap"],
+      replies: [
+        "This is the uniform of a Toronto letter carrier. You can make out the numerals on my collar there. I will tell you plainly what it meant to put it on. They had said the work was not for a man like me. Every morning I buttoned this coat and walked out into the city anyway. Cloth is only cloth, but the day they let me wear mine, Toronto had decided something about itself.",
+        "The coat, the buttons, the numerals at my throat. To you it is an old photograph. To me it was proof. A man does not get handed a uniform like this in 1882 with my face; he gets it because his neighbours would not let the matter rest. I wore it for thirty-six years."
+      ],
+      follow: ["carrier", "route", "community"]
+    },
+    {
       id: "greeting",
       keys: ["hello", "hi", "hey", "good day", "greetings", "who are you", "your name", "introduce", "morning", "afternoon"],
       replies: [
@@ -219,6 +228,7 @@
     community: "Who stood up for you?",
     macdonald: "Did the Prime Minister help you?",
     route: "What was the work like?",
+    uniform: "Tell me about your uniform",
     family: "Did you have a family?",
     legacy: "How are you remembered today?",
     advice: "What should we learn from your story?"
@@ -346,6 +356,34 @@
   const albertMotionLabel = document.getElementById("albertMotionLabel");
   const albertImg = albertStage ? albertStage.querySelector(".albert-frame img") : null;
 
+  /* Landmarks on assets/portrait-1882.jpg, as fractions of the image.
+     The frame's aspect ratio matches the photograph exactly, so these
+     map straight onto the rendered element. Keep the mask coordinates
+     in styles.css in step with these. Append ?debug=face to the URL to
+     draw them and check the alignment by eye. */
+  const FACE = {
+    eyeL:  { x: 44.2, y: 36.3 },
+    eyeR:  { x: 58.5, y: 36.0 },
+    mouth: { x: 49.0, y: 50.2 },
+    head:  { x: 51.0, y: 24.0 },
+    collar:{ x: 51.0, y: 58.0 },
+    chest: { x: 48.0, y: 73.0 },
+    armL:  { x: 25.0, y: 78.0 },
+    armR:  { x: 73.0, y: 74.0 },
+  };
+
+  if (albertStage && /(\?|&)debug=face\b/.test(location.search)) {
+    const frame = albertStage.querySelector(".albert-frame");
+    Object.entries(FACE).forEach(([name, p]) => {
+      const dot = document.createElement("span");
+      dot.className = "face-marker";
+      dot.dataset.label = name;
+      dot.style.left = p.x + "%";
+      dot.style.top = p.y + "%";
+      frame.appendChild(dot);
+    });
+  }
+
   let motionOn = !prefersReduced;
   let blinkTimer = null;
 
@@ -391,6 +429,28 @@
 
   if (albertMotion) {
     albertMotion.addEventListener("click", () => setMotion(!motionOn));
+  }
+
+  /* Pressing part of the portrait asks him about that part. The click
+     goes through the normal conversation path, so it works in live and
+     offline mode alike and is spoken aloud if voice is on. */
+  if (albertStage) {
+    albertStage.querySelectorAll(".albert-spot").forEach((spot) => {
+      spot.addEventListener("click", () => {
+        const topic = spot.dataset.topic;
+        const question = LABELS[topic] || spot.textContent.trim();
+        handleUser(question, topic);
+        // Bring the answer into view on narrow screens, where the
+        // portrait sits above the conversation.
+        const chatEl = document.querySelector(".chat");
+        if (chatEl && window.innerWidth <= 860) {
+          chatEl.scrollIntoView({
+            behavior: prefersReduced ? "auto" : "smooth",
+            block: "nearest",
+          });
+        }
+      });
+    });
   }
   if (albertStage) {
     setMotion(motionOn);

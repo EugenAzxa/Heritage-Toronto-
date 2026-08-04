@@ -259,12 +259,39 @@
       <figure class="albert-stage" id="albertStage">
         <div class="albert-frame">
           <img src="assets/portrait-1882.jpg" alt="Albert Jackson photographed in his letter carrier uniform, about 1882" />
-          <span class="albert-jaw" aria-hidden="true"></span>
-          <span class="albert-lid albert-lid--l" aria-hidden="true"></span>
-          <span class="albert-lid albert-lid--r" aria-hidden="true"></span>
+          <!-- Each overlay is a fixed window (the mask) with the same
+               photograph moving inside it. Masking and moving the same
+               element would slide the window too, which is why nothing
+               appeared to blink. -->
+          <span class="albert-jaw" aria-hidden="true"><i></i></span>
+          <span class="albert-lid albert-lid--l" aria-hidden="true"><i></i></span>
+          <span class="albert-lid albert-lid--r" aria-hidden="true"><i></i></span>
           <span class="albert-halo" aria-hidden="true"></span>
+
+          <!-- Press him and he answers about what you pressed. Coordinates
+               are fractions of the photograph; see FACE in script.js. -->
+          <button type="button" class="albert-spot" data-topic="greeting"
+                  style="--x:51%; --y:26%; --w:30%; --h:20%"
+                  data-hint="Say good day">Say good day to Albert</button>
+
+          <button type="button" class="albert-spot" data-topic="uniform"
+                  style="--x:51%; --y:58%; --w:34%; --h:9%"
+                  data-hint="His collar">Ask about the numerals on his collar</button>
+
+          <button type="button" class="albert-spot" data-topic="uniform"
+                  style="--x:48%; --y:76%; --w:30%; --h:26%"
+                  data-hint="His uniform">Ask about his uniform</button>
+
+          <button type="button" class="albert-spot" data-topic="route"
+                  style="--x:23%; --y:78%; --w:20%; --h:26%"
+                  data-hint="His route">Ask what the work was like</button>
+
+          <button type="button" class="albert-spot" data-topic="carrier"
+                  style="--x:75%; --y:74%; --w:18%; --h:26%"
+                  data-hint="His appointment">Ask how he became a letter carrier</button>
         </div>
         <figcaption>Albert Jackson, about 1882</figcaption>
+        <p class="albert-prompt-hint">Press his coat, his collar or his sleeve</p>
         <button type="button" class="albert-motion" id="albertMotion" aria-pressed="true">
           <span class="albert-motion-dot" aria-hidden="true"></span>
           <span id="albertMotionLabel">Motion on</span>
