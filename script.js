@@ -43,6 +43,53 @@
     revealEls.forEach((el) => el.classList.add("in"));
   }
 
+  /* ============================================================
+     DRIFTING MAIL
+     A slow current of letters through the dark sections. Seeded
+     deterministically so the composition is the same every visit
+     rather than a different random mess each load, and skipped
+     entirely under prefers-reduced-motion.
+     ============================================================ */
+
+  function seedDrift() {
+    if (prefersReduced) return;
+
+    // Small deterministic PRNG: same layout on every load.
+    let seed = 20130517; // the year the laneway took his name
+    const rnd = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+
+    const ENVELOPE =
+      '<svg viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round">' +
+      '<rect x="0.7" y="0.7" width="22.6" height="16.6" rx="1.6"/><path d="m0.9 1.6 11.1 7.6 11.1-7.6"/></svg>';
+
+    document.querySelectorAll("[data-drift]").forEach((host) => {
+      const count = Math.max(3, Math.min(14, parseInt(host.dataset.drift, 10) || 9));
+      const layer = document.createElement("div");
+      layer.className = "drift";
+      layer.setAttribute("aria-hidden", "true");
+
+      for (let i = 0; i < count; i++) {
+        const item = document.createElement("span");
+        item.className = "drift-item";
+        item.innerHTML = ENVELOPE;
+        const size = 16 + rnd() * 26;
+        item.style.setProperty("--x", (4 + rnd() * 92).toFixed(2) + "%");
+        item.style.setProperty("--size", size.toFixed(1) + "px");
+        item.style.setProperty("--dur", (34 + rnd() * 30).toFixed(1) + "s");
+        item.style.setProperty("--delay", (-rnd() * 60).toFixed(1) + "s");
+        item.style.setProperty("--drift", (rnd() * 60 - 30).toFixed(1) + "px");
+        item.style.setProperty("--spin", (rnd() * 50 - 25).toFixed(1) + "deg");
+        item.style.setProperty("--fade", (0.05 + rnd() * 0.09).toFixed(3));
+        layer.appendChild(item);
+      }
+      host.insertBefore(layer, host.firstChild);
+    });
+  }
+  seedDrift();
+
   /* ---------- Gallery lightbox ---------- */
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightboxImg");
@@ -67,11 +114,29 @@
     document.body.style.overflow = "";
     if (lastFocused) lastFocused.focus();
   }
-  document.querySelectorAll(".gallery-item").forEach((fig) => {
+  /* Anything carrying data-full opens in the lightbox. Keyed off the
+     attribute rather than a .gallery-item class so the story images
+     are viewable in place, which is what let the gallery stop
+     repeating them. */
+  document.querySelectorAll("[data-full]").forEach((fig) => {
     const img = fig.querySelector("img");
-    fig.addEventListener("click", () =>
-      openLightbox(fig.dataset.full, fig.dataset.caption, img ? img.alt : "")
-    );
+    const open = () =>
+      openLightbox(fig.dataset.full, fig.dataset.caption, img ? img.alt : "");
+
+    fig.addEventListener("click", open);
+
+    // Keyboard parity: these are real controls, not decoration.
+    if (!fig.hasAttribute("tabindex")) fig.setAttribute("tabindex", "0");
+    if (!fig.hasAttribute("role")) fig.setAttribute("role", "button");
+    if (!fig.hasAttribute("aria-label")) {
+      fig.setAttribute("aria-label", "View larger: " + (img ? img.alt : "image"));
+    }
+    fig.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
+    });
   });
   if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
   if (lightbox)
@@ -653,10 +718,11 @@
     const avatar = document.createElement("span");
     avatar.className = "msg-avatar";
     if (who === "albert") {
-      const img = document.createElement("img");
-      img.src = PORTRAIT;
-      img.alt = "";
-      avatar.appendChild(img);
+      /* A monogram, not the photograph. His face belongs on the portrait
+         beside the conversation; repeating an archival image once per
+         message turns a document into wallpaper. */
+      avatar.classList.add("msg-avatar--mark");
+      avatar.textContent = "AJ";
     } else {
       avatar.innerHTML =
         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';

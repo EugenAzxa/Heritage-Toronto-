@@ -806,6 +806,12 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .msg { display: flex; gap: 0.7rem; max-width: 85%; animation: msgIn 0.4s var(--ease) both; }
 @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .msg-avatar { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1.5px var(--brass); }
+.msg-avatar--mark {
+  display: grid; place-items: center; overflow: visible;
+  background: var(--navy); color: var(--brass-light);
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.04em;
+}
 .msg-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: sepia(0.15); }
 .msg-bubble { padding: 0.8rem 1.05rem; border-radius: 16px; font-size: 1.02rem; line-height: 1.55; }
 .msg-bubble p { margin: 0; }
@@ -852,6 +858,134 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .chat-input.busy input { opacity: 0.6; }
 .chat-input.busy button { background: var(--ink-faint); cursor: progress; transform: none; }
 .chat-input button:disabled:hover { background: var(--ink-faint); transform: none; }
+
+/* ---- The record: facts and credits, replacing the old gallery ---- */
+.record-grid {
+  max-width: var(--maxw); margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem);
+}
+.record-col h3 {
+  font-size: 1.02rem; font-family: var(--font-sans); font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--crimson);
+  margin: 0 0 1rem;
+}
+.record-col h3 + ul { margin-bottom: 2.2rem; }
+
+.record-list { margin: 0; }
+.record-list > div {
+  display: grid; grid-template-columns: 8.5rem 1fr; gap: 1rem;
+  padding: 0.7rem 0; border-top: 1px solid var(--line);
+}
+.record-list > div:last-child { border-bottom: 1px solid var(--line); }
+.record-list dt {
+  font-family: var(--font-sans); font-size: 0.74rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
+  padding-top: 0.2rem;
+}
+.record-list dd { margin: 0; font-size: 1rem; line-height: 1.5; }
+
+.credit-list { list-style: none; margin: 0; padding: 0; }
+.credit-list li {
+  padding: 0.6rem 0; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.credit-list strong { font-weight: 600; font-size: 0.99rem; }
+.credit-list span {
+  font-family: var(--font-sans); font-size: 0.79rem; color: var(--ink-faint);
+}
+.record-note {
+  margin: 1.2rem 0 0; font-family: var(--font-sans);
+  font-size: 0.76rem; line-height: 1.55; color: var(--ink-faint);
+}
+
+/* Story images are the lightbox entry point now */
+.chapter-media[data-full] { cursor: zoom-in; }
+.chapter-media[data-full]:focus-visible {
+  outline: 2px solid var(--crimson); outline-offset: 3px;
+}
+
+@media (max-width: 860px) {
+  .record-grid { grid-template-columns: 1fr; }
+  .record-list > div { grid-template-columns: 1fr; gap: 0.15rem; }
+}
+
+/* ============================================================
+   DRIFTING MAIL  -  ambient background motion
+   Letters rising slowly through the dark sections. Composited
+   on the GPU (transform/opacity only) and clipped by the host.
+   ============================================================ */
+.drift {
+  position: absolute; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+}
+.drift-item {
+  position: absolute; top: 50%; left: var(--x);
+  width: var(--size); height: auto;
+  color: var(--brass);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: driftUp var(--dur) linear var(--delay) infinite;
+}
+.drift-item svg { display: block; width: 100%; height: auto; }
+
+@keyframes driftUp {
+  0%   { transform: translate3d(0, 62vh, 0) rotate(0deg); opacity: 0; }
+  14%  { opacity: var(--fade); }
+  86%  { opacity: var(--fade); }
+  100% { transform: translate3d(var(--drift), -62vh, 0) rotate(var(--spin)); opacity: 0; }
+}
+
+/* The hero's paper grain, breathing very slowly */
+.hero-grain { animation: grainShift 26s ease-in-out infinite alternate; }
+@keyframes grainShift {
+  from { transform: translate3d(0, 0, 0)      scale(1);    opacity: 0.5;  }
+  to   { transform: translate3d(-14px, 9px, 0) scale(1.05); opacity: 0.34; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift { display: none; }
+  .hero-grain { animation: none; }
+}
+
+/* ============================================================
+   ABOUT THIS PROJECT  (the Saylavy panel)
+   ============================================================ */
+.about-demo {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(800px 480px at 82% 15%, rgba(195,154,80,0.15), transparent 60%),
+    linear-gradient(170deg, var(--navy-deep) 0%, var(--navy) 100%);
+  color: var(--cream);
+  padding: clamp(4rem, 8vw, 6.5rem) var(--gutter);
+  border-top: 1px solid rgba(195,154,80,0.28);
+}
+.about-inner { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; }
+.about-lede {
+  max-width: 60ch; margin: 0 0 2.6rem;
+  font-size: clamp(1.05rem, 1.4vw, 1.22rem); color: rgba(252,248,239,0.82);
+}
+.about-lede strong { color: var(--brass-light); font-weight: 600; }
+
+.about-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: clamp(1.2rem, 2.5vw, 2rem);
+}
+.about-card {
+  padding: 1.4rem 1.5rem; border-radius: var(--radius);
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(195,154,80,0.24);
+}
+.about-card h3 {
+  margin: 0 0 0.6rem; font-size: 1.08rem; font-weight: 600; color: var(--brass-light);
+}
+.about-card p { margin: 0; font-size: 0.97rem; line-height: 1.6; color: rgba(252,248,239,0.78); }
+.about-card a { color: var(--brass-light); text-underline-offset: 3px; }
+
+.about-note {
+  max-width: 62ch; margin: 2.4rem 0 0;
+  font-family: var(--font-sans); font-size: 0.88rem; line-height: 1.65;
+  color: rgba(252,248,239,0.66);
+}
 
 .speak-note {
   max-width: 760px; margin: 1.4rem auto 0; text-align: center;

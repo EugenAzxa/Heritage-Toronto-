@@ -17,8 +17,8 @@
       "name": "Albert Jackson",
       "born": 1857, "died": 1918,
       "field": "freedom",
-      "place": "Delaware, United States",
-      "lat": 39.0, "lng": -75.5,
+      "place": "Milford, Delaware, United States",
+      "lat": 38.9126, "lng": -75.4280,
       "wiki": "Albert Jackson (mail carrier)",
       "blurb": "Born into slavery in Delaware and carried north to Toronto by his mother on the Underground Railroad. In 1882 he became Toronto's first Black letter carrier, and kept the post only because his community refused to let prejudice take it from him.",
       "home": true
@@ -29,7 +29,7 @@
       "born": null, "died": null,
       "field": "freedom",
       "place": "Delaware, United States",
-      "lat": 38.91, "lng": -75.43,
+      "lat": 38.98, "lng": -75.52,
       "wiki": "Ann Maria Jackson",
       "blurb": "Albert Jackson's mother. After two of her eldest children were sold and her husband died in a poorhouse, she learned four more were about to be sold and fled in November 1858 with the seven still with her, by way of Wilmington, Philadelphia and St. Catharines to Toronto. Escaping with seven children was almost unheard of."
     },
