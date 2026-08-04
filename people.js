@@ -79,7 +79,17 @@
   /* Two datasets share one globe: lives across the world, and Heritage
      Toronto's plaques across one city. The plaque file is ~280KB, so it
      is fetched only when someone actually asks for it. */
-  let mode = "world";            // "world" | "toronto"
+  let mode = "world";            // which dataset: "world" | "toronto"
+
+  /* Which instrument is drawing it. The globe is built from 110m country
+     outlines, so below roughly a regional view it has nothing left to
+     show. Past that point it hands the same coordinates to the street
+     map, which does have streets. */
+  let surface = "globe";         // "globe" | "street"
+  const HANDOFF_ALTITUDE = 0.075;   // globe altitude at which streets take over
+  const RETURN_ZOOM = 6;            // street zoom at which the globe takes back
+  let handingOff = false;
+
   let plaques = null;            // null until first loaded
   let plaqueMeta = null;
   const TORONTO_VIEW = { lat: 43.705, lng: -79.39, altitude: 0.028 };
@@ -186,7 +196,7 @@
     el.clear.hidden = !raw;
     renderCount();
     renderList();
-    if (isToronto()) paintMarkers();
+    if (isToronto() || surface === "street") paintMarkers();
     else if (world) world.pointsData(visible);
     // If the open card is now filtered out, leave it; the visitor asked for it.
   }
@@ -342,8 +352,12 @@
     if (body) body.scrollTop = 0;
   }
 
+  // Branch on what the record IS, not on which mode is showing it: the
+  // street map can now carry people as well as plaques.
+  const isPlaque = (p) => p && typeof p.text === "string" && !p.wiki;
+
   function renderCard(p) {
-    if (isToronto()) return renderPlaqueCard(p);
+    if (isPlaque(p)) return renderPlaqueCard(p);
     el.cardLink.firstChild.textContent = "Read more on Wikipedia ";
     el.cardField.textContent = fieldLabel[p.field] || "";
     el.cardField.style.color = colorFor(p);
@@ -449,7 +463,7 @@
     renderCard(p);
     renderList();
 
-    if (isToronto()) {
+    if (isToronto() || surface === "street") {
       highlightMarker();
       if (fly && lmap) {
         lmap.setView([p.lat, p.lng], Math.max(lmap.getZoom(), 16), {
@@ -509,7 +523,9 @@
     lmap = L.map(el.map, {
       center: [43.68, -79.38],
       zoom: 12,
-      minZoom: 10,
+      // Must go below RETURN_ZOOM, or zooming out can never reach the
+      // point where the globe takes back over.
+      minZoom: 4,
       maxZoom: 18,
       zoomControl: true,
       attributionControl: true,
@@ -526,6 +542,7 @@
     ).addTo(lmap);
 
     markerLayer = L.layerGroup().addTo(lmap);
+    watchStreetZoom();
   }
 
   function paintMarkers() {
@@ -540,9 +557,10 @@
         className: "plaque-pin",
         color: "#0D1526",
         weight: 1.4,
-        fillColor: PLAQUE_COLOR,
+        fillColor: isPlaque(p) ? PLAQUE_COLOR : colorFor(p),
         fillOpacity: 0.92,
       });
+      m.options.__baseColor = isPlaque(p) ? PLAQUE_COLOR : colorFor(p);
       m.bindTooltip(p.name, { direction: "top", offset: [0, -6] });
       m.on("click", () => select(p, false));
       m.addTo(markerLayer);
@@ -555,8 +573,9 @@
   function highlightMarker() {
     markerFor.forEach((m, key) => {
       const on = selected && entryKey(selected) === key;
+      const base = m.options.__baseColor || PLAQUE_COLOR;
       m.setStyle({
-        fillColor: on ? "#A02B22" : PLAQUE_COLOR,
+        fillColor: on ? "#A02B22" : base,
         radius: on ? 9 : 6,
         weight: on ? 2 : 1.4,
       });
@@ -616,9 +635,6 @@
     // Fields only mean something for the people dataset.
     el.filters.hidden = isToronto();
 
-    const homeLabel = document.getElementById("atlasHomeLabel");
-    if (homeLabel) homeLabel.textContent = isToronto() ? "Toronto" : "Albert";
-
     const credit = document.getElementById("atlasCredit");
     if (credit) {
       credit.textContent = isToronto()
@@ -640,12 +656,9 @@
       el.query.placeholder = "Search a name, country or century...";
     }
 
-    // Swap the instrument: globe for the world, street map for the city.
-    el.map.hidden = !isToronto();
-    el.globe.hidden = isToronto();
-    el.spin.hidden = isToronto();
-    const zoomGroup = document.getElementById("atlasZoom");
-    if (zoomGroup) zoomGroup.hidden = isToronto();   // Leaflet has its own
+    // Leaving Toronto plaques always returns you to the globe.
+    surface = isToronto() ? "street" : "globe";
+    applySurface();
 
     if (isToronto()) {
       buildMap();
@@ -710,6 +723,12 @@
       requestAnimationFrame(() => {
         queued = false;
         const now = currentAltitude();
+        // Wheel-zoomed past the point where the globe has anything left
+        // to draw: hand over to the street map.
+        if (surface === "globe" && !isToronto() && now < HANDOFF_ALTITUDE) {
+          handOff(world.pointOfView());
+          return;
+        }
         if (Math.abs(now - last) / Math.max(last, 0.001) > 0.06) {
           last = now;
           stylePoints();
@@ -719,12 +738,100 @@
   }
 
   function zoomBy(factor) {
+    if (surface === "street") {
+      if (lmap) lmap.setZoom(lmap.getZoom() + (factor < 1 ? 1 : -1));
+      return;
+    }
     if (!world) return;
     setSpinning(false);
     const pov = world.pointOfView();
     const alt = Math.max(0.03, Math.min(4.5, pov.altitude * factor));
+
+    if (alt < HANDOFF_ALTITUDE) {
+      handOff(pov);
+      return;
+    }
     world.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: alt }, prefersReduced ? 0 : 420);
     setTimeout(stylePoints, prefersReduced ? 10 : 460);
+  }
+
+  /* ---------- Globe <-> street handoff ---------- */
+
+  /* Zooming in is almost always aimed at something. If a person is
+     selected, land on them rather than on wherever the camera happened
+     to be pointing, which is how the first attempt put Glenn Gould's
+     grave off-screen over Lake Michigan. */
+  function handOff(pov) {
+    if (selected && isFinite(selected.lat) && isFinite(selected.lng)) {
+      toStreet(selected.lat, selected.lng, 15);
+    } else {
+      toStreet(pov.lat, pov.lng, 11);
+    }
+  }
+
+  async function toStreet(lat, lng, zoom) {
+    if (handingOff || surface === "street") return;
+    handingOff = true;
+    try {
+      if (!(await ensureLeaflet())) return;   // stay on the globe if it fails
+      setSpinning(false);
+      surface = "street";
+      applySurface();
+      buildMap();
+      requestAnimationFrame(() => {
+        lmap.invalidateSize();
+        lmap.setView([lat, lng], zoom, { animate: false });
+        paintMarkers();
+      });
+    } finally {
+      handingOff = false;
+    }
+  }
+
+  function toGlobe(lat, lng, altitude) {
+    if (surface === "globe") return;
+    surface = "globe";
+    applySurface();
+    if (world) {
+      world.pointOfView(
+        { lat: lat, lng: lng, altitude: altitude || 0.9 },
+        prefersReduced ? 0 : 700
+      );
+      world.pointsData(visible);
+      setTimeout(stylePoints, prefersReduced ? 10 : 760);
+    }
+  }
+
+  /* Show whichever instrument is current, and label the escape hatch. */
+  function applySurface() {
+    const street = surface === "street" || isToronto();
+    el.map.hidden = !street;
+    el.globe.hidden = street;
+    el.spin.hidden = street;
+    // Leaflet brings its own zoom control, so ours only shows on the globe.
+    const zoomGroup = document.getElementById("atlasZoom");
+    if (zoomGroup) zoomGroup.hidden = street;
+
+    const homeLabel = document.getElementById("atlasHomeLabel");
+    if (homeLabel) {
+      homeLabel.textContent = isToronto()
+        ? "Toronto"
+        : surface === "street"
+        ? "Back to globe"
+        : "Albert";
+    }
+  }
+
+  /* On the street map, zooming far enough out returns to the globe. */
+  function watchStreetZoom() {
+    if (!lmap) return;
+    lmap.on("zoomend", () => {
+      if (isToronto() || surface !== "street") return;
+      if (lmap.getZoom() <= RETURN_ZOOM) {
+        const c = lmap.getCenter();
+        toGlobe(c.lat, c.lng, 0.9);
+      }
+    });
   }
 
   function setSpinning(on) {
@@ -899,6 +1006,11 @@
     el.home.addEventListener("click", () => {
       if (isToronto()) {
         if (lmap) lmap.setView([43.68, -79.38], 12, { animate: !prefersReduced });
+        return;
+      }
+      if (surface === "street") {
+        const c = lmap ? lmap.getCenter() : { lat: 20, lng: -40 };
+        toGlobe(c.lat, c.lng, 1.1);
         return;
       }
       const albert = people.find((p) => p.home);
