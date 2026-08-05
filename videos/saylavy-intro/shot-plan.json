@@ -1,0 +1,70 @@
+{
+  "category": "webpage",
+  "duration_s": 10,
+  "fps": 30,
+  "canvas": { "w": 1920, "h": 1080, "aspect": "16:9" },
+  "style": "Archival editorial. Navy field, brass rules, parchment type. The pacing of a title sequence rather than an ad: type sets the promise, the product appears once and is allowed to sit, the numbers land, the mark closes. No bounce, no spin, nothing playful; every ease is power2/power3/sine so the motion reads as considered rather than sold.",
+  "palette": ["#0D1526", "#16233F", "#223354", "#C39A50", "#E2C88C", "#F6EEDD", "#FCF8EF", "#A02B22"],
+  "font": "Newsreader (serif, vendored) + Public Sans (sans, vendored)",
+  "beats": [0.35, 2.8, 5.8, 8.2],
+  "export": "mp4",
+
+  "asset_needs": [
+    {
+      "role": "hero",
+      "kind": "web",
+      "query": "Heritage Toronto x Saylavy home page, hero with 3D globe",
+      "source": "http://localhost:8000/index.html",
+      "treatment": "none"
+    }
+  ],
+
+  "block": null,
+  "customize": {
+    "note": "Hand-authored. The catalog caption blocks assume a bare kinetic-type shot; this piece needs a persistent brass frame, a product screen inset and a three-column stat bank sharing one timeline, so the composition is written directly against the builder contract."
+  },
+
+  "content": {
+    "url": "http://localhost:8000/index.html",
+    "capture": "capture/screenshots/scroll-000.png -> assets/site-hero.png",
+    "scenes": [
+      {
+        "id": "sceneBrand",
+        "start": 0,
+        "end": 2.8,
+        "text": "Every life has a place on the map",
+        "eyebrow": "HERITAGE TORONTO × SAYLAVY",
+        "motion": "rule underline_sweep, eyebrow fade_in, headline word_reveal (stagger .085, power3.out)"
+      },
+      {
+        "id": "sceneProduct",
+        "start": 2.8,
+        "end": 5.8,
+        "label": "The living atlas",
+        "motion": "screen slide_bottom + scale settle out of a 6deg X-tilt, brass spotlight ring pulses once over the globe, caption slides from left"
+      },
+      {
+        "id": "sceneStats",
+        "start": 5.8,
+        "end": 8.2,
+        "stats": [
+          { "value": 573, "label": "lives on the globe" },
+          { "value": 312, "label": "Heritage Toronto plaques" },
+          { "value": 5, "label": "that answer when asked" }
+        ],
+        "motion": "columns rise with stagger, values count up on a seek-safe proxy, brass rule wipes under each"
+      },
+      {
+        "id": "sceneLockup",
+        "start": 8.2,
+        "end": 10,
+        "text": "Heritage Toronto × Saylavy",
+        "url": "saylavy.info",
+        "motion": "mark scale_grow, wordmark fade_blur in, rule underline_sweep, url fade_in"
+      }
+    ],
+    "highlights": [
+      { "region": "globe", "label": "573 lives, placed where they began or ended" }
+    ]
+  }
+}

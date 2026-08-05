@@ -1,0 +1,490 @@
+<!DOCTYPE html>﻿
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Heritage Toronto × Saylavy — 10s intro</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  /* ============================================================
+     Palette — every colour in the piece is declared here. The site's
+     own tokens, unchanged, so the video and the product match.
+     ============================================================ */
+  :root {
+    --navy-deep: #0D1526;
+    --navy:      #16233F;
+    --navy-soft: #223354;
+    --brass:     #C39A50;
+    --brass-lt:  #E2C88C;
+    --parchment: #F6EEDD;
+    --cream:     #FCF8EF;
+    --crimson:   #A02B22;
+
+    --serif: "Newsreader", Georgia, serif;
+    --sans:  "Public Sans", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--navy-deep); }
+
+  /* Root must carry a resolved size or flex children collapse. */
+  #stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: var(--navy-deep);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Persistent background ---------- */
+
+  .bg { position: absolute; inset: 0; }
+  .bg-wash {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 90% at 68% 38%, #1B2C4C 0%, var(--navy) 42%, var(--navy-deep) 78%);
+  }
+  /* A faint ledger rule, the archive gesture the whole site leans on. */
+  .bg-rules {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom, rgba(195,154,80,0.055) 0 1px, transparent 1px 96px
+    );
+    opacity: 0.85;
+  }
+  .bg-vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(78% 66% at 50% 50%, transparent 40%, rgba(4,8,16,0.62) 100%);
+  }
+
+  /* ---------- Persistent furniture ---------- */
+
+  .frame {
+    position: absolute; inset: 46px;
+    border: 1px solid rgba(195,154,80,0.30);
+    pointer-events: none;
+  }
+  .frame-tick {
+    position: absolute; width: 26px; height: 26px;
+    border: 0 solid var(--brass);
+  }
+  .frame-tick.tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+  .frame-tick.tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+  .frame-tick.bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+  .frame-tick.br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+
+  .corner-mark {
+    position: absolute; left: 92px; bottom: 88px;
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--sans); font-size: 17px; font-weight: 600;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(226,200,140,0.72);
+  }
+  .corner-mark .mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--brass-lt); color: var(--navy-deep);
+    display: grid; place-items: center;
+  }
+
+  /* The clock hairline: reads as a title sequence, not a slideshow. */
+  .progress {
+    position: absolute; left: 46px; right: 46px; bottom: 46px; height: 2px;
+    background: rgba(195,154,80,0.16);
+  }
+  .progress-fill {
+    position: absolute; inset: 0; transform-origin: left center;
+    background: linear-gradient(90deg, var(--brass), var(--brass-lt));
+  }
+
+  /* ---------- Scenes ---------- */
+
+  .scene { position: absolute; inset: 0; }
+  .scene-content {
+    display: flex; flex-direction: column; justify-content: center;
+    width: 100%; height: 100%;
+    padding: 130px 160px;
+    gap: 26px;
+  }
+
+  /* Scene A — brand and promise */
+
+  .eyebrow { display: flex; align-items: center; gap: 20px; }
+  .eyebrow-rule {
+    width: 96px; height: 2px; background: var(--brass);
+    transform-origin: left center;
+  }
+  .eyebrow-text {
+    font-family: var(--sans); font-size: 21px; font-weight: 600;
+    letter-spacing: 0.30em; text-transform: uppercase;
+    color: var(--brass-lt);
+  }
+
+  .headline {
+    margin: 0; max-width: 1360px;
+    font-family: var(--serif); font-weight: 700;
+    font-size: 138px; line-height: 1.03; letter-spacing: -0.018em;
+    color: var(--cream);
+  }
+  .headline .line { display: block; }
+  /* Each word is its own inline-block so it can rise independently, and
+     each sits in a clipping sleeve so it rises out of nothing. */
+  .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.10em; }
+  .w > i { display: inline-block; font-style: normal; }
+  .headline em { font-style: italic; color: var(--brass-lt); }
+
+  .sub {
+    margin: 18px 0 0;
+    font-family: var(--sans); font-size: 27px; font-weight: 400;
+    letter-spacing: 0.01em; color: rgba(246,238,221,0.70);
+  }
+
+  /* Scene B — the product */
+
+  .product { align-items: center; justify-content: center; gap: 0; }
+  .screen-wrap { perspective: 2200px; }
+  .screen {
+    position: relative;
+    width: 1340px; height: 754px;
+    border-radius: 20px; overflow: hidden;
+    border: 1px solid rgba(226,200,140,0.42);
+    box-shadow:
+      0 60px 120px rgba(3,7,14,0.72),
+      0 0 0 1px rgba(13,21,38,0.9);
+    background: var(--navy);
+  }
+  .screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .screen-gloss {
+    position: absolute; inset: 0;
+    background: linear-gradient(112deg, rgba(255,255,255,0.16) 12%, transparent 46%);
+    transform: translateX(-120%);
+  }
+
+  /* The ring finds a person, not the planet. Albert Jackson's medallion
+     sits at 1670,645 in the 1920x1080 capture; the screenshot fills this
+     box at the same aspect, so those pixels are these percentages. Ringing
+     the whole globe said "here is a globe"; ringing him says "this is a
+     life you can ask a question of", which is the product. */
+  .spot {
+    position: absolute; top: 59.7%; left: 87%;
+    width: 168px; height: 168px; margin: -84px 0 0 -84px;
+    border-radius: 50%;
+    border: 2px solid rgba(226,200,140,0.95);
+    box-shadow: 0 0 34px rgba(226,200,140,0.42), inset 0 0 28px rgba(226,200,140,0.14);
+  }
+
+  .product-caption {
+    position: absolute; left: 160px; bottom: 150px;
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 26px 14px 20px;
+    border-radius: 999px;
+    background: rgba(13,21,38,0.86);
+    border: 1px solid rgba(226,200,140,0.34);
+    font-family: var(--sans); font-size: 24px; font-weight: 600;
+    color: var(--cream);
+  }
+  .product-caption .dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--brass-lt); box-shadow: 0 0 0 5px rgba(226,200,140,0.20);
+  }
+
+  /* Scene C — the numbers */
+
+  .stats { flex-direction: row; align-items: center; gap: 92px; padding: 130px 170px; }
+  .stat { flex: 1 1 0; min-width: 0; }
+  .stat-rule {
+    width: 100%; height: 2px; background: rgba(195,154,80,0.85);
+    transform-origin: left center; margin-bottom: 30px;
+  }
+  .stat-value {
+    font-family: var(--serif); font-weight: 700; font-size: 168px; line-height: 0.94;
+    color: var(--brass-lt); letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    margin-top: 20px;
+    font-family: var(--sans); font-size: 26px; font-weight: 500; line-height: 1.35;
+    color: rgba(246,238,221,0.76);
+  }
+
+  /* Scene D — lockup */
+
+  .lockup { align-items: center; justify-content: center; text-align: center; gap: 0; }
+  .lockup-mark {
+    width: 84px; height: 84px; border-radius: 21px;
+    background: var(--brass-lt); color: var(--navy-deep);
+    display: grid; place-items: center; margin-bottom: 40px;
+  }
+  .lockup-name {
+    font-family: var(--serif); font-weight: 700; font-size: 92px; letter-spacing: -0.01em;
+    color: var(--cream); margin: 0;
+  }
+  .lockup-name span { color: var(--brass-lt); }
+  .lockup-rule {
+    width: 300px; height: 2px; background: var(--brass);
+    margin: 36px 0 30px; transform-origin: center;
+  }
+  .lockup-url {
+    font-family: var(--sans); font-size: 30px; font-weight: 600;
+    letter-spacing: 0.20em; text-transform: uppercase; color: var(--brass-lt);
+  }
+</style>
+</head>
+<body>
+
+<div data-hf-id="hf-k1am" id="stage" data-composition-id="root" data-start="0" data-duration="10" data-width="1920" data-height="1080">
+
+  <!-- Background: full duration, bottom track -->
+  <div data-hf-id="hf-kx2t" class="clip bg" id="bg" data-start="0" data-duration="10" data-track-index="0">
+    <div data-hf-id="hf-83o3" class="bg-wash"></div>
+    <div data-hf-id="hf-nwix" class="bg-rules" id="bgRules"></div>
+    <div data-hf-id="hf-qkdk" class="bg-vignette"></div>
+  </div>
+
+  <!-- ============ Scene A — brand and promise ============ -->
+  <div data-hf-id="hf-90l2" class="clip scene" id="sceneBrand" data-start="0" data-duration="2.8" data-track-index="1">
+    <div data-hf-id="hf-r6id" class="scene-content" id="brandBody">
+      <div data-hf-id="hf-rk6h" class="eyebrow">
+        <span data-hf-id="hf-426c" class="eyebrow-rule" id="brandRule"></span>
+        <span data-hf-id="hf-428o" class="eyebrow-text" id="brandEyebrow">Heritage Toronto × Saylavy</span>
+      </div>
+      <h1 data-hf-id="hf-cgmz" class="headline" id="brandHeadline">
+        <span data-hf-id="hf-6c9z" class="line"><span data-hf-id="hf-fr20" class="w"><i data-hf-id="hf-7qih" data-layout-allow-overflow="true">Every</i></span> <span data-hf-id="hf-xths" class="w"><i data-hf-id="hf-dsgg" data-layout-allow-overflow="true">life</i></span> <span data-hf-id="hf-wmkp" class="w"><i data-hf-id="hf-au6q" data-layout-allow-overflow="true">has</i></span> <span data-hf-id="hf-x0vq" class="w"><i data-hf-id="hf-7u0x" data-layout-allow-overflow="true">a</i></span> <span data-hf-id="hf-vtyn" class="w"><i data-hf-id="hf-zftx" data-layout-allow-overflow="true">place</i></span></span>
+        <span data-hf-id="hf-tvt3" class="line"><span data-hf-id="hf-w89o" class="w"><i data-hf-id="hf-l7g3" data-layout-allow-overflow="true">on</i></span> <span data-hf-id="hf-v1cl" class="w"><i data-hf-id="hf-dr2x" data-layout-allow-overflow="true">the</i></span> <span data-hf-id="hf-vfnm" class="w"><i data-hf-id="hf-uj7e" data-layout-allow-overflow="true"><em data-hf-id="hf-df5j">map</em></i></span></span>
+      </h1>
+      <p data-hf-id="hf-j7zm" class="sub" id="brandSub">A living archive for the city's plaques.</p>
+    </div>
+  </div>
+
+  <!-- ============ Scene B — the product ============ -->
+  <div data-hf-id="hf-4es3" class="clip scene" id="sceneProduct" data-start="2.8" data-duration="3" data-track-index="1">
+    <div data-hf-id="hf-t948" class="scene-content product" id="productBody">
+      <div data-hf-id="hf-scyp" class="screen-wrap">
+        <div data-hf-id="hf-jm57" class="screen" id="productScreen">
+          <img data-hf-id="hf-o891" src="assets/site-hero.png" alt="">
+          <div data-hf-id="hf-wiuj" class="spot" id="productSpot"></div>
+          <div data-hf-id="hf-sgsb" class="screen-gloss" id="productGloss" data-layout-allow-overflow="true"></div>
+        </div>
+      </div>
+    </div>
+    <div data-hf-id="hf-bhrn" class="product-caption" id="productCaption">
+      <span data-hf-id="hf-9gry" class="dot"></span>
+      <span data-hf-id="hf-05ny">The living atlas</span>
+    </div>
+  </div>
+
+  <!-- ============ Scene C — the numbers ============ -->
+  <div data-hf-id="hf-j2qx" class="clip scene" id="sceneStats" data-start="5.8" data-duration="2.4" data-track-index="1">
+    <div data-hf-id="hf-0wd8" class="scene-content stats" id="statsBody">
+      <div data-hf-id="hf-5tdi" class="stat" id="stat0">
+        <div data-hf-id="hf-3g2h" class="stat-rule"></div>
+        <div data-hf-id="hf-zu6w" class="stat-value" data-to="573">0</div>
+        <div data-hf-id="hf-h4e1" class="stat-label">lives on the globe</div>
+      </div>
+      <div data-hf-id="hf-9rhj" class="stat" id="stat1">
+        <div data-hf-id="hf-ax2l" class="stat-rule"></div>
+        <div data-hf-id="hf-nx13" class="stat-value" data-to="312">0</div>
+        <div data-hf-id="hf-p5pi" class="stat-label">Heritage Toronto plaques</div>
+      </div>
+      <div data-hf-id="hf-yvzw" class="stat" id="stat2">
+        <div data-hf-id="hf-c3zo" class="stat-rule"></div>
+        <div data-hf-id="hf-kun2" class="stat-value" data-to="5">0</div>
+        <div data-hf-id="hf-aw9g" class="stat-label">that answer when asked</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Scene D — lockup ============ -->
+  <div data-hf-id="hf-m970" class="clip scene" id="sceneLockup" data-start="8.2" data-duration="1.8" data-track-index="1">
+    <div data-hf-id="hf-skxi" class="scene-content lockup" id="lockupBody">
+      <div data-hf-id="hf-fyo3" class="lockup-mark" id="lockupMark">
+        <svg data-hf-id="hf-1f1e" viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path data-hf-id="hf-dndd" d="M3 6h18v12H3z" /><path data-hf-id="hf-cwl6" d="m3 7 9 6 9-6" />
+        </svg>
+      </div>
+      <p data-hf-id="hf-3r7n" class="lockup-name" id="lockupName">Heritage Toronto <span data-hf-id="hf-v48y">×</span> Saylavy</p>
+      <div data-hf-id="hf-ow73" class="lockup-rule" id="lockupRule"></div>
+      <div data-hf-id="hf-7pk8" class="lockup-url" id="lockupUrl">saylavy.info</div>
+    </div>
+  </div>
+
+  <!-- Furniture: full duration, above the scenes -->
+  <div data-hf-id="hf-qdrd" class="clip" id="furniture" data-start="0" data-duration="10" data-track-index="2">
+    <div data-hf-id="hf-d9wv" class="frame">
+      <span data-hf-id="hf-850i" class="frame-tick tl"></span><span data-hf-id="hf-g18k" class="frame-tick tr"></span>
+      <span data-hf-id="hf-kf9k" class="frame-tick bl"></span><span data-hf-id="hf-3yn2" class="frame-tick br"></span>
+    </div>
+    <div data-hf-id="hf-2g19" class="corner-mark" id="cornerMark">
+      <span data-hf-id="hf-zeo6" class="mark">
+        <svg data-hf-id="hf-gzst" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path data-hf-id="hf-77yd" d="M3 6h18v12H3z" /><path data-hf-id="hf-2hsu" d="m3 7 9 6 9-6" />
+        </svg>
+      </span>
+      <span data-hf-id="hf-yd6q">Living archive</span>
+    </div>
+    <div data-hf-id="hf-31j5" class="progress"><div data-hf-id="hf-f7r5" class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const tl = gsap.timeline({ paused: true });
+
+  /* ------------------------------------------------------------
+     Scene A — 0.0 to 2.8
+     The rule draws, the label arrives on it, then the sentence
+     rises a word at a time out of its own baseline.
+     ------------------------------------------------------------ */
+
+  tl.fromTo("#brandRule",
+    { scaleX: 0 },
+    { scaleX: 1, duration: 0.72, ease: "power3.out" }, 0.18);
+
+  tl.fromTo("#brandEyebrow",
+    { autoAlpha: 0, x: -16 },
+    { autoAlpha: 1, x: 0, duration: 0.6, ease: "power2.out" }, 0.34);
+
+  tl.fromTo("#brandHeadline .w > i",
+    { yPercent: 108 },
+    { yPercent: 0, duration: 0.92, ease: "power3.out", stagger: 0.062 }, 0.52);
+
+  tl.fromTo("#brandSub",
+    { autoAlpha: 0, y: 20 },
+    { autoAlpha: 1, y: 0, duration: 0.66, ease: "power2.out" }, 1.42);
+
+  /* The whole block eases off rather than cutting. The hard set at the
+     boundary is what makes a backwards seek land clean: a tween that
+     merely ends at 2.80 can be seeked past, leaving the old state behind. */
+  tl.to("#brandBody",
+    { autoAlpha: 0, y: -34, duration: 0.42, ease: "power2.in" }, 2.42);
+  tl.set("#brandBody", { autoAlpha: 0 }, 2.80);
+
+  /* ------------------------------------------------------------
+     Scene B — 2.8 to 5.8
+     The product arrives once, out of a slight tilt, and is then
+     left alone to be looked at. A ring finds the globe; the gloss
+     crosses the glass once.
+     ------------------------------------------------------------ */
+
+  tl.fromTo("#productScreen",
+    { autoAlpha: 0, y: 86, scale: 0.94, rotationX: 7 },
+    { autoAlpha: 1, y: 0, scale: 1, rotationX: 0, duration: 1.15, ease: "power3.out" }, 2.86);
+
+  tl.fromTo("#productGloss",
+    { xPercent: -120 },
+    { xPercent: 120, duration: 1.25, ease: "power2.inOut" }, 3.42);
+
+  tl.fromTo("#productCaption",
+    { autoAlpha: 0, x: -40 },
+    { autoAlpha: 1, x: 0, duration: 0.62, ease: "power2.out" }, 3.56);
+
+  /* Ring: opens onto the globe, then breathes once. */
+  tl.fromTo("#productSpot",
+    { autoAlpha: 0, scale: 1.7 },
+    { autoAlpha: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 3.95);
+  tl.to("#productSpot",
+    { scale: 1.07, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, 4.7);
+
+  /* A slow push in, so the shot is never completely still. */
+  tl.fromTo("#productBody",
+    { scale: 1 },
+    { scale: 1.035, duration: 2.6, ease: "sine.inOut" }, 2.9);
+
+  tl.to("#productBody",
+    { autoAlpha: 0, duration: 0.36, ease: "power2.in" }, 5.44);
+  tl.to("#productCaption",
+    { autoAlpha: 0, duration: 0.36, ease: "power2.in" }, 5.44);
+  tl.set("#productBody", { autoAlpha: 0 }, 5.80);
+  tl.set("#productCaption", { autoAlpha: 0 }, 5.80);
+
+  /* ------------------------------------------------------------
+     Scene C — 5.8 to 8.2
+     Three columns, staggered, each rule wiping in under its
+     number. Counters tween a proxy so any seek lands correctly.
+     ------------------------------------------------------------ */
+
+  const cols = ["#stat0", "#stat1", "#stat2"];
+
+  cols.forEach(function (sel, i) {
+    const at = 5.88 + i * 0.14;
+
+    tl.fromTo(sel,
+      { autoAlpha: 0, y: 46 },
+      { autoAlpha: 1, y: 0, duration: 0.66, ease: "power3.out" }, at);
+
+    tl.fromTo(sel + " .stat-rule",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.72, ease: "power3.out" }, at + 0.06);
+
+    /* Seek-safe count: the proxy is the animated state, and the DOM is
+       written from it on every update. No wall clock, no randomness. */
+    const node = document.querySelector(sel + " .stat-value");
+    const target = parseInt(node.getAttribute("data-to"), 10);
+    const proxy = { n: 0 };
+
+    tl.fromTo(proxy,
+      { n: 0 },
+      {
+        n: target,
+        duration: 1.15,
+        ease: "power2.out",
+        onUpdate: function () {
+          node.textContent = String(Math.round(proxy.n));
+        },
+      }, at + 0.1);
+  });
+
+  tl.to("#statsBody",
+    { autoAlpha: 0, y: -28, duration: 0.36, ease: "power2.in" }, 7.86);
+  tl.set("#statsBody", { autoAlpha: 0 }, 8.20);
+
+  /* ------------------------------------------------------------
+     Scene D — 8.2 to 10.0
+     The mark, the name out of a blur, the rule, the address.
+     ------------------------------------------------------------ */
+
+  tl.fromTo("#lockupMark",
+    { autoAlpha: 0, scale: 0.6 },
+    { autoAlpha: 1, scale: 1, duration: 0.62, ease: "power3.out" }, 8.28);
+
+  tl.fromTo("#lockupName",
+    { autoAlpha: 0, filter: "blur(16px)", y: 22 },
+    { autoAlpha: 1, filter: "blur(0px)", y: 0, duration: 0.78, ease: "power2.out" }, 8.44);
+
+  tl.fromTo("#lockupRule",
+    { scaleX: 0 },
+    { scaleX: 1, duration: 0.68, ease: "power3.out" }, 8.84);
+
+  tl.fromTo("#lockupUrl",
+    { autoAlpha: 0, y: 16 },
+    { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out" }, 9.02);
+
+  /* ------------------------------------------------------------
+     Furniture, running under everything
+     ------------------------------------------------------------ */
+
+  tl.fromTo("#progressFill",
+    { scaleX: 0 },
+    { scaleX: 1, duration: 10, ease: "none" }, 0);
+
+  tl.fromTo("#cornerMark",
+    { autoAlpha: 0 },
+    { autoAlpha: 1, duration: 0.7, ease: "power2.out" }, 0.9);
+
+  /* The ledger rules drift a single line's height across the whole
+     piece: enough to feel alive, not enough to notice. */
+  tl.fromTo("#bgRules",
+    { y: 0 },
+    { y: -96, duration: 10, ease: "none" }, 0);
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines["root"] = tl;
+  tl.seek(0);
+})();
+</script>
+</body>
+</html>

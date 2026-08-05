@@ -1,4 +1,4 @@
-# OS
+﻿# OS
 .DS_Store
 
 # Temp / build artifacts
@@ -28,3 +28,12 @@ Albert+jackson.jpg.webp
 albert_jackson_postman.jpg
 albertjacksonstamp.jpg
 e010963829-v8.jpg
+
+# HyperFrames video project (videos/): keep the source composition, the
+# vendored fonts and the finished MP4. The rest is regenerable:
+#   capture/   re-run `hyperframes capture` against the running site
+#   snapshots/ re-run `hyperframes snapshot`
+videos/*/capture/
+videos/*/snapshots/
+videos/*/.hyperframes/
+videos/*/.thumbnails/
