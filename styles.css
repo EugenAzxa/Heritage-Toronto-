@@ -2039,3 +2039,61 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   .street-demo-code img { width: 110px; height: 110px; }
   .mock-plaque { width: 100%; }
 }
+
+/* ============================================================
+   CO-BRAND LOCKUP
+   ------------------------------------------------------------
+   Heritage Toronto's logo sits beside their name wherever the
+   two brands appear together. The asset is theirs and is not in
+   this repository, so every use is written to work without it:
+   the logo is hidden until it actually loads, the typed wordmark
+   stands in until then, and a failed request removes the image
+   rather than leaving a broken graphic in the header.
+
+   Drop the file at assets/heritage-toronto.png and it appears in
+   all three places at once.
+   ============================================================ */
+
+.brand-lockup {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.brand-ht {
+  display: none;             /* until onload confirms it resolved */
+  height: 32px; width: auto;
+  /* The logo is dark type on white. On the navy header that needs a light
+     plate under it rather than being left to disappear. */
+  padding: 3px 5px; border-radius: 4px;
+  background: var(--cream);
+}
+.brand-lockup.has-ht .brand-ht { display: block; }
+.brand-lockup.has-ht .brand-ht-text { display: none; }
+
+/* The scrolled header is parchment, so the plate is unnecessary there. */
+.site-header.scrolled .brand-ht { background: transparent; padding: 3px 0; }
+
+/* ---------- In the collaboration section ---------- */
+
+.street-deal-logo {
+  display: none;
+  height: 34px; width: auto; margin-right: 0.15rem;
+}
+.street-deal-col h3.has-ht .street-deal-logo { display: block; }
+.street-deal-col h3.has-ht .street-deal-mark--ht { display: none; }
+
+/* ---------- The affiliation notice ---------- */
+
+.footer-affiliation {
+  max-width: 62ch;
+  margin: 1.5rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(226, 200, 140, 0.16);
+  font-family: var(--font-sans); font-size: 0.76rem; line-height: 1.65;
+  color: rgba(252, 248, 239, 0.5);
+  text-align: center;
+}
+.footer-affiliation a { color: rgba(226, 200, 140, 0.8); }
+
+@media (max-width: 720px) {
+  .brand-ht { height: 26px; }
+  .footer-affiliation { text-align: left; }
+}

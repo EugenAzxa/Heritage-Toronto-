@@ -59,7 +59,7 @@
         <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="9.2" stroke-width="1.6"/><circle cx="12" cy="12" r="6.4" stroke-width="1.2"/><path d="M9 10.6h6M9 13.6h3.6" stroke-width="1.6"/></svg>
       </span>
       <span class="brand-text">
-        <strong>Heritage Toronto <i aria-hidden="true">&times;</i> Saylavy</strong>
+        <strong class="brand-lockup"><img class="brand-ht" src="assets/heritage-toronto.png" alt="Heritage Toronto" width="116" height="50" onload="this.parentNode.classList.add(&quot;has-ht&quot;)" onerror="this.remove()" /><span class="brand-ht-text">Heritage Toronto</span> <i aria-hidden="true">&times;</i> Saylavy</strong>
         <em>Living archive, proposal</em>
       </span>
     </a>
@@ -565,7 +565,12 @@
           </ul>
         </div>
         <div class="street-deal-col">
-          <h3><span class="street-deal-mark street-deal-mark--ht" aria-hidden="true">HT</span> Heritage Toronto keeps</h3>
+          <h3>
+            <img class="street-deal-logo" src="assets/heritage-toronto.png" alt=""
+                 onload="this.parentNode.classList.add('has-ht')" onerror="this.remove()" />
+            <span class="street-deal-mark street-deal-mark--ht" aria-hidden="true">HT</span>
+            Heritage Toronto keeps
+          </h3>
           <ul>
             <li>Approval of every placement, before anything is fixed to anything</li>
             <li>Sign-off on each voice's record before it answers a single question</li>
@@ -620,6 +625,15 @@
       <p>Made as a tribute. Albert Jackson's story belongs to the city he served.</p>
       <p class="footer-mark">A demonstration built by <a href="https://saylavy.com" target="_blank" rel="noopener">Saylavy</a></p>
     </div>
+
+    <!-- Says out loud what the lockup at the top implies, so that nobody
+         landing here cold reads a proposal as an existing partnership. -->
+    <p class="footer-affiliation">
+      An independent proposal by <a href="https://saylavy.com" target="_blank" rel="noopener">Saylavy</a>.
+      Not affiliated with, endorsed by, or commissioned by Heritage Toronto.
+      Their name and logo appear here to illustrate a collaboration that is being proposed,
+      not one that exists. Heritage Toronto&rsquo;s marks remain their property.
+    </p>
   </footer>
 
   <!-- Live "Speak with Albert" via the Claude API.
