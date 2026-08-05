@@ -1273,6 +1273,29 @@
     el.loading.classList.add("gone");
     setSpinning(spinning);
     dismissPreloader();
+
+    openVoiceFromUrl();
+  }
+
+  /* The home page floats the six voices over its globe, and each one links
+     here as people.html?voice=<id>. Arriving that way should land on that
+     person's plaque with the conversation already open, not on the world
+     view with five more clicks to go. */
+  async function openVoiceFromUrl() {
+    const wanted = new URLSearchParams(location.search).get("voice");
+    if (!wanted || !window.HeritageVoices) return;
+
+    await window.HeritageVoices.ready();
+    const voice = window.HeritageVoices.all().find((v) => v.id === wanted);
+    if (!voice) return;
+
+    await setMode("toronto");
+
+    const title = (voice.plaques || [])[0];
+    const plaque = (plaques || []).find((p) => p.name === title);
+    if (plaque) select(plaque, true);
+
+    window.HeritageVoices.open(voice);
   }
 
   if (document.readyState === "loading") {

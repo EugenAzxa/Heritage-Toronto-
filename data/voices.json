@@ -8,9 +8,12 @@
    "name": "William Peyton Hubbard",
    "dates": "1842 to 1935",
    "role": "Toronto's first Black elected official",
+   "wiki": "William Peyton Hubbard",
    "field": "leadership",
    "teaser": "Son of parents who escaped slavery in Virginia. Elected in 1894, acting mayor, and the man who fought to keep Toronto's water and power in public hands.",
-   "plaques": ["William Peyton Hubbard"],
+   "plaques": [
+    "William Peyton Hubbard"
+   ],
    "opening": "Good day. William Peyton Hubbard. You are standing at the house on Broadview, so you know the headline already, the first of my colour on that council. Ask me the rest of it. Ask me about the water and the electricity, which is the work I would rather be remembered for.",
    "chips": [
     "Why fight for public power?",
@@ -24,9 +27,13 @@
    "name": "Glenn Gould",
    "dates": "1932 to 1982",
    "role": "pianist and broadcaster",
+   "wiki": "Glenn Gould",
    "field": "music",
    "teaser": "Walked away from the concert hall at thirty-one and never went back. His Bach is still travelling out of the solar system aboard Voyager.",
-   "plaques": ["Glenn Gould", "Glenn Gould (25 September 1932 - 4 October 1982)"],
+   "plaques": [
+    "Glenn Gould",
+    "Glenn Gould (25 September 1932 - 4 October 1982)"
+   ],
    "opening": "Hello. Yes, this is the house, 32 Southwood Drive, where a great deal of Bach was inflicted on the neighbours. Ask me anything, though I should warn you that if you ask why I walked away from the concert hall you will get rather more of an answer than you bargained for.",
    "chips": [
     "Why did you stop performing?",
@@ -40,9 +47,12 @@
    "name": "L. M. Montgomery",
    "dates": "1874 to 1942",
    "role": "author of Anne of Green Gables",
+   "wiki": "Lucy Maud Montgomery",
    "field": "arts",
    "teaser": "Wrote the most cheerful books in Canada and kept the darkest journals. She finished the last of them in a Swansea house she named Journey's End.",
-   "plaques": ["Lucy Maud Montgomery"],
+   "plaques": [
+    "Lucy Maud Montgomery"
+   ],
    "opening": "Hello, my dear. Maud Montgomery. This was Swansea when I knew it, and the house I called Journey's End is just along there. I wrote my last books in it. Ask me about Anne if you like; most people do. Ask me about the journals if you would rather have the truth.",
    "chips": [
     "Where did Anne come from?",
@@ -56,9 +66,12 @@
    "name": "J. J. R. Macleod",
    "dates": "1876 to 1935",
    "role": "physiologist, co-discoverer of insulin",
+   "wiki": "John Macleod (physiologist)",
    "field": "science",
    "teaser": "Insulin came out of his laboratory and the Nobel Prize came with it. Whether he deserved a share of it was argued over for most of a century.",
-   "plaques": ["John James Rickard Macleod"],
+   "plaques": [
+    "John James Rickard Macleod"
+   ],
    "opening": "Good afternoon. Macleod, professor of physiology. I lived in this house while the work on the pancreas was going on up at the university. Ask me what insulin is, or what diabetes did to children before we had it. Ask me about the Nobel business too, if you want the argument as well as the discovery.",
    "chips": [
     "What did diabetes do before insulin?",
@@ -72,9 +85,12 @@
    "name": "Boris Volkoff",
    "dates": "1900 to 1974",
    "role": "father of Canadian ballet",
+   "wiki": "Boris Volkoff",
    "field": "arts",
    "teaser": "Defected from a Siberian tour, was smuggled into Canada in 1929, and built the school that became the National Ballet. He spent the rest of his life regretting giving it away.",
-   "plaques": ["Boris Volkoff"],
+   "plaques": [
+    "Boris Volkoff"
+   ],
    "opening": "So. You found the studio. Right here, from 1930, and for forty-four years I taught in it. Boris Volkoff. The plaque says I came to Toronto in 1929, which is a very polite way of putting it. Ask me how I really arrived, or ask me about the dancers. I would rather talk about the dancers.",
    "chips": [
     "How did you really get to Canada?",

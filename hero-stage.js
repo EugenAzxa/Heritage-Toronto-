@@ -213,41 +213,99 @@
 
   /* ---------------- Faces ---------------- */
 
-  // Placed clear of the copy column, around the planet's limb.
+  /* These are the people a visitor can actually hold a conversation with,
+     and nobody else. The hero used to float Tubman, Mandela, Curie, Kahlo
+     and Gandhi over the planet, which looked well and promised something
+     the site does not do: none of them answer. Now the faces on the globe
+     are exactly the six voices that do, and each one is a link to the
+     place where you can ask them something.
+
+     Positions are unchanged, and geographic accuracy is not the point:
+     these are medallions drifting over the limb, not pins. Albert keeps
+     the largest slot as the site's anchor. */
   const SLOTS = [
-    { id: "harriet-tubman",     x: "59%", y: "24%", s: "86px",  d: "0.25s", dur: "7.5s" },
-    { id: "nelson-mandela",     x: "79%", y: "33%", s: "104px", d: "0.5s",  dur: "9s"   },
-    { id: "marie-curie",        x: "66%", y: "55%", s: "78px",  d: "0.75s", dur: "8.2s" },
-    { id: "albert-jackson",     x: "87%", y: "60%", s: "112px", d: "0.1s",  dur: "8.8s" },
-    { id: "frida-kahlo",        x: "57%", y: "73%", s: "72px",  d: "0.95s", dur: "7.1s" },
-    { id: "mahatma-gandhi",     x: "78%", y: "80%", s: "80px",  d: "1.15s", dur: "9.4s" },
+    { id: "gould",      x: "59%", y: "24%", s: "86px",  d: "0.25s", dur: "7.5s" },
+    { id: "hubbard",    x: "79%", y: "33%", s: "104px", d: "0.5s",  dur: "9s"   },
+    { id: "montgomery", x: "66%", y: "55%", s: "78px",  d: "0.75s", dur: "8.2s" },
+    { id: "albert",     x: "87%", y: "60%", s: "112px", d: "0.1s",  dur: "8.8s" },
+    { id: "volkoff",    x: "57%", y: "73%", s: "72px",  d: "0.95s", dur: "7.1s" },
+    { id: "macleod",    x: "78%", y: "80%", s: "80px",  d: "1.15s", dur: "9.4s" },
   ];
 
-  async function runFaces(atlas) {
+  /* Albert is not in voices.json: that file is the five plaque voices, and
+     he has no Heritage Toronto plaque, he has a laneway. He lives in the
+     Worker's registry and answers on this page rather than in the atlas,
+     so he is described here. */
+  const ALBERT = {
+    id: "albert",
+    name: "Albert Jackson",
+    dates: "1857 to 1918",
+    role: "Toronto's first Black letter carrier",
+    wiki: "Albert Jackson (mail carrier)",
+    href: "#speak",
+  };
+
+  const shortName = (n) => n.replace(/^([A-Z]\.\s*)+/, "").trim() || n;
+
+  async function runFaces() {
     if (!facesEl || window.innerWidth < 900) return;
-    const people = atlas && Array.isArray(atlas.people) ? atlas.people : [];
-    if (!people.length) return;
+
+    const data = await loadJSON("data/voices.json");
+    const voices = data && Array.isArray(data.voices) ? data.voices : [];
+
+    const cast = [ALBERT].concat(
+      voices.map((v) => Object.assign({}, v, {
+        // The atlas opens the plaque and its conversation directly.
+        href: "people.html?voice=" + encodeURIComponent(v.id),
+      }))
+    );
 
     for (const slot of SLOTS) {
-      const person = people.find((p) => p.id === slot.id);
+      const person = cast.find((p) => p.id === slot.id);
       if (!person) continue;
 
-      const node = document.createElement("div");
+      const node = document.createElement("a");
       node.className = "stage-face";
+      node.href = person.href;
+      node.setAttribute("aria-label", "Speak with " + person.name + ", " + person.role);
       node.style.setProperty("--fx", slot.x);
       node.style.setProperty("--fy", slot.y);
       node.style.setProperty("--fs", slot.s);
       node.style.setProperty("--fdelay", slot.d);
       node.style.setProperty("--fdur", slot.dur);
 
+      const photo = document.createElement("span");
+      photo.className = "stage-face-photo";
+
       // Initials show immediately; a portrait replaces them if one loads.
       const initials = document.createElement("span");
+      initials.className = "stage-face-initials";
       initials.textContent = person.name
-        .split(/\s+/).slice(0, 2).map((w) => w[0]).join("");
-      node.appendChild(initials);
+        .split(/\s+/).filter((w) => /^[A-Za-z]/.test(w))
+        .slice(0, 2).map((w) => w[0]).join("");
+      photo.appendChild(initials);
+      node.appendChild(photo);
+
+      // Always-on mark: the difference between a portrait and a portrait
+      // you can talk to has to be visible without hovering.
+      const badge = document.createElement("i");
+      badge.className = "stage-face-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.innerHTML =
+        '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" ' +
+        'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-8.6A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+      node.appendChild(badge);
+
+      const label = document.createElement("b");
+      label.className = "stage-face-label";
+      label.setAttribute("aria-hidden", "true");
+      label.textContent = shortName(person.name);
+      node.appendChild(label);
+
       facesEl.appendChild(node);
 
-      loadPortrait(person, node);
+      loadPortrait(person, photo);
     }
   }
 
@@ -271,7 +329,7 @@
       img.decoding = "async";
       img.onload = () => {
         node.insertBefore(img, node.firstChild);
-        const span = node.querySelector("span");
+        const span = node.querySelector(".stage-face-initials");
         if (span) span.remove();
       };
       img.src = src;
@@ -285,9 +343,9 @@
   runStars();
 
   const start = async () => {
-    const atlas = await loadJSON("data/people.json");
-    runFaces(atlas);
-    runPlanet(atlas);
+    // The faces come from voices.json, the planet's pins from people.json.
+    runFaces();
+    loadJSON("data/people.json").then(runPlanet);
   };
 
   const kick = () => {
