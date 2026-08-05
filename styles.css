@@ -122,13 +122,23 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 
 .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--cream); }
 .site-header.scrolled .brand { color: var(--navy); }
+/* A cast bronze tile rather than a flat one: the gradient plus the two
+   inset hairlines read as a lit edge and a shadowed one, which is what
+   stops it looking like a default app icon. */
 .brand-mark {
   display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0;
-  border-radius: 11px; background: var(--brass-light); color: var(--navy-deep);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+  border-radius: 11px; color: var(--navy-deep);
+  background: linear-gradient(155deg, #F2E0B4 0%, var(--brass-light) 45%, var(--brass) 100%);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(120,88,30,0.45);
   transition: background 0.4s var(--ease), color 0.4s var(--ease);
 }
-.site-header.scrolled .brand-mark { background: var(--navy); color: var(--brass-light); }
+.site-header.scrolled .brand-mark {
+  background: var(--navy); color: var(--brass-light);
+  box-shadow: 0 4px 12px rgba(13,21,38,0.28), inset 0 1px 0 rgba(255,255,255,0.09);
+}
 .brand-text { display: flex; flex-direction: column; line-height: 1; font-family: var(--font-sans); }
 .brand-text strong { font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; }
 .brand-text strong i { font-style: normal; opacity: 0.55; margin: 0 0.15em; }

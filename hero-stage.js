@@ -187,7 +187,9 @@
       c.autoRotate = true;
       c.autoRotateSpeed = 0.38;
     }
-    world.pointOfView({ lat: 18, lng: -55, altitude: 1.85 }, 0);
+    // Every pin in the atlas is in Canada now, so the hero turns with
+    // Canada facing the copy rather than the mid-Atlantic.
+    world.pointOfView({ lat: 44, lng: -84, altitude: 1.85 }, 0);
 
     const size = () => {
       const r = planetEl.getBoundingClientRect();

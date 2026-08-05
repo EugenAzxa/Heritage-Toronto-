@@ -71,7 +71,6 @@
   let fieldLabel = {};
   let visible = [];
   let activeField = "all";
-  let torontoOnly = false;   // narrow the world view to the Canadian cohort
   let selected = null;
   let spinning = !prefersReduced;
   const wikiCache = new Map();
@@ -197,10 +196,7 @@
       const era = parseEra(raw);
       const q = era ? "" : raw;
       visible = people.filter(
-        (p) =>
-          (activeField === "all" || p.field === activeField) &&
-          (!torontoOnly || p.anchor === "died") &&
-          matches(p, q, era)
+        (p) => (activeField === "all" || p.field === activeField) && matches(p, q, era)
       );
     }
 
@@ -217,11 +213,7 @@
   function renderCount() {
     const n = visible.length;
     const total = dataset().length;
-    const noun = isToronto()
-      ? "Heritage Toronto plaques"
-      : torontoOnly
-      ? "lives that ended in Canada"
-      : "lives on the globe";
+    const noun = isToronto() ? "Heritage Toronto plaques" : "lives across Canada";
     el.count.textContent =
       n === total ? total + " " + noun : n + " of " + total + " shown";
   }
@@ -275,24 +267,10 @@
 
     el.filters.appendChild(make("all", "All"));
 
-    // Toronto is the point of this atlas for Heritage Toronto, so it gets
-    // its own control rather than hiding among the disciplines.
-    const tor = document.createElement("button");
-    tor.type = "button";
-    tor.className = "atlas-chip atlas-chip--toronto";
-    tor.setAttribute("aria-pressed", String(torontoOnly));
-    tor.textContent = "Died in Canada";
-    tor.addEventListener("click", () => {
-      torontoOnly = !torontoOnly;
-      renderFilters();
-      applyFilters();
-      if (torontoOnly && world) {
-        setSpinning(false);
-        world.pointOfView({ lat: 51, lng: -95, altitude: 1.15 }, prefersReduced ? 0 : 1200);
-        setTimeout(stylePoints, prefersReduced ? 10 : 1300);
-      }
-    });
-    el.filters.appendChild(tor);
+    /* There used to be a "Died in Canada" chip here, back when the atlas
+       held 68 lives from around the world alongside the Canadian cohort.
+       Every pin is in Canada now, so the filter would keep 506 of 510 and
+       tell nobody anything. Removed rather than left as decoration. */
 
     fields.forEach((f) => {
       el.filters.appendChild(make(f.id, f.label, FIELD_COLOR[f.id]));
@@ -805,7 +783,7 @@
     if (credit) {
       credit.textContent = isToronto()
         ? "Plaque locations and text from Heritage Toronto's published Exploration Map, a selected set. Albert Jackson's own 2017 plaque is not part of it."
-        : "Birth pins are approximate to the town or district. Canadian pins sit at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. Summaries load live from Wikipedia.";
+        : "Every pin is in Canada. A life sits at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. A few are pinned where they were born instead, and the card says so. Summaries load live from Wikipedia.";
     }
 
     const title = document.getElementById("atlasTitle");
@@ -818,8 +796,8 @@
     } else {
       title.innerHTML = "Every pin<br/>is a life";
       lede.textContent =
-        "Sixty-eight lives pinned where they began, and five hundred more pinned where they ended, across Canada. Zoom in and the crowds come apart.";
-      el.query.placeholder = "Search a name, country or century...";
+        "Five hundred and ten lives across Canada, pinned where each one ended. Zoom in and the crowds come apart.";
+      el.query.placeholder = "Search a name, place or century...";
     }
 
     // Leaving Toronto plaques always returns you to the globe.
@@ -842,7 +820,9 @@
       stylePoints();
       setSpinning(false);
       if (world) {
-        world.pointOfView({ lat: 22, lng: -40, altitude: 2.2 }, prefersReduced ? 0 : 1400);
+        // Every pin is in Canada, so the world view opens on Canada rather
+        // than on the mid-Atlantic it used to.
+        world.pointOfView({ lat: 54, lng: -96, altitude: 1.7 }, prefersReduced ? 0 : 1400);
       }
     }
   }
@@ -1127,7 +1107,9 @@
     stylePoints();
     sizeGlobe();
 
-    // Open on Albert's birthplace, the thread that ties the two pages together.
+    // Open on Albert's grave in Toronto, the thread that ties the two pages
+    // together. He used to be pinned in Delaware, where he was born; the
+    // atlas is Canada now and he sits at the Necropolis.
     const albert = people.find((p) => p.home) || people[0];
     if (albert) {
       world.pointOfView({ lat: albert.lat, lng: albert.lng, altitude: 2.4 }, 0);

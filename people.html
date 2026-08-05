@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Atlas of Lives &middot; Heritage Toronto &times; Saylavy</title>
-  <meta name="description" content="An interactive 3D globe of notable figures from every continent, pinned at their birthplace. Search by name, place, era or field, and read a live summary for each life." />
+  <meta name="description" content="An interactive 3D globe of 510 notable lives across Canada, pinned where each one ended, plus all 312 Heritage Toronto plaques on the street where they stand. Five of the plaques answer questions." />
   <meta name="theme-color" content="#0D1526" />
 
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Atlas of Lives &middot; A World Globe of Famous Figures" />
-  <meta property="og:description" content="Spin the globe. Search a name. Every pin is a life, placed where it began." />
+  <meta property="og:title" content="Atlas of Lives &middot; 510 lives and 312 plaques across Canada" />
+  <meta property="og:description" content="Spin the globe. Search a name. Every pin is a life, placed where it ended." />
   <meta property="og:image" content="assets/stamp.jpg" />
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316233F'/%3E%3Cg fill='none' stroke='%23E2C88C' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 11h18v10H7z'/%3E%3Cpath d='m7 12 9 6 9-6'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316233F'/%3E%3Cg fill='none' stroke='%23E2C88C' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='10' stroke-width='2.2'/%3E%3Ccircle cx='16' cy='16' r='5.6' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,9 +31,11 @@
           <circle class="preloader-ring-track" cx="50" cy="50" r="46" />
           <circle class="preloader-ring-arc" cx="50" cy="50" r="46" />
         </svg>
+        <!-- See index.html: the animated ring is the mark's outer ring. -->
         <svg class="preloader-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 6h18v12H3z" /><path d="m3 7 9 6 9-6" />
+             stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="7.4" stroke-width="1.3" />
+          <path d="M8.6 10.4h6.8M8.6 13.6h4.2" stroke-width="1.5" />
         </svg>
       </span>
       <p class="preloader-brand">Heritage Toronto <i>&times;</i> Saylavy</p>
@@ -49,7 +51,7 @@
   <header class="site-header scrolled" id="siteHeader">
     <a class="brand" href="index.html" aria-label="Heritage Toronto and Saylavy, home">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg>
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="9.2" stroke-width="1.6"/><circle cx="12" cy="12" r="6.4" stroke-width="1.2"/><path d="M9 10.6h6M9 13.6h3.6" stroke-width="1.6"/></svg>
       </span>
       <span class="brand-text">
         <strong>Heritage Toronto <i aria-hidden="true">&times;</i> Saylavy</strong>
@@ -79,7 +81,7 @@
       <div class="atlas-intro">
         <p class="atlas-eyebrow"><span class="eyebrow-line"></span>Atlas of Lives</p>
         <h1 class="atlas-title" id="atlasTitle">Every pin<br/>is a life</h1>
-        <p class="atlas-lede" id="atlasLede">Sixty-eight lives pinned where they began, and five hundred more pinned where they ended, across Canada. Zoom in and the crowds come apart.</p>
+        <p class="atlas-lede" id="atlasLede">Five hundred and ten lives across Canada, pinned where each one ended. Zoom in and the crowds come apart.</p>
       </div>
 
       <div class="atlas-modes" role="group" aria-label="Choose a map">
@@ -111,7 +113,7 @@
         <span class="atlas-search-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         </span>
-        <input id="atlasQuery" type="search" placeholder="Search a name, country or century..." maxlength="60" />
+        <input id="atlasQuery" type="search" placeholder="Search a name, place or century..." maxlength="60" />
         <button type="button" class="atlas-clear" id="atlasClear" aria-label="Clear search" hidden>
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
@@ -123,7 +125,7 @@
 
       <ul class="atlas-list" id="atlasList" aria-label="People on the globe"></ul>
 
-      <p class="atlas-credit" id="atlasCredit">Birth pins are approximate to the town or district. Canadian pins sit at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. Summaries load live from Wikipedia.</p>
+      <p class="atlas-credit" id="atlasCredit">Every pin is in Canada. A life sits at the grave where the record gives one, otherwise at the place of death, offset slightly so neighbours in one city can be told apart. A few are pinned where they were born instead, and the card says so. Summaries load live from Wikipedia.</p>
     </aside>
 
     <!-- ============ GLOBE ============ -->
