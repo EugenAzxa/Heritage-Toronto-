@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Albert Jackson  |  Heritage Toronto tribute
    Heritage-postal design system
    ============================================================ */
@@ -1352,4 +1352,251 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
   .reveal { opacity: 1; transform: none; }
   .scroll-hint svg { animation: none; }
+}
+
+/* ============================================================
+   INTERACTION LAYER
+   ------------------------------------------------------------
+   Every control on the site answers a press the same way: it
+   compresses, it takes a ripple from where the pointer landed,
+   and the filled ones catch a sweep of light on hover.
+
+   This block sits at the END of the stylesheet on purpose. The
+   :active rules tie on specificity with the :hover rules above
+   them, and a tie is decided by source order. Move this up and
+   nothing presses.
+   ============================================================ */
+
+/* ---------- The surface a ripple needs ---------- */
+
+.btn,
+.nav-cta,
+.nav-toggle,
+.suggest,
+.chat-input button[type="submit"],
+.chat-mic,
+.atlas-ctrl,
+.atlas-chip,
+.atlas-mode,
+.atlas-ask,
+.atlas-voices-hint,
+.atlas-item,
+.atlas-card-close,
+.voice-chip,
+.voice-send,
+.voice-sound,
+.voice-close,
+.lightbox-close {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  /* currentColor means the ripple is always the button's own text
+     colour: white on crimson, navy on brass, brass on navy. One rule,
+     right everywhere, nothing to keep in sync. */
+  background: currentColor;
+  /* On the dark panels currentColor is itself a translucent cream, so the
+     ink lands at roughly two thirds of this. 0.34 is the value at which it
+     reads on navy without looking like a stamp on brass. */
+  opacity: 0.34;
+  transform: scale(0);
+  animation: ripple-out 620ms cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+}
+@keyframes ripple-out {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* Keep the label above the ink.
+   :not(.ripple) is load-bearing. Without it this rule also matches the ink
+   span, and `.btn > *` outspecifies `.ripple`, so the ink loses its
+   position:absolute, rejoins the flow and inflates the button to the size
+   of the circle. */
+.btn > *:not(.ripple),
+.nav-cta > *:not(.ripple),
+.atlas-ask > *:not(.ripple),
+.atlas-voices-hint > *:not(.ripple),
+.atlas-item > *:not(.ripple),
+.atlas-chip > *:not(.ripple),
+.suggest > *:not(.ripple) { position: relative; z-index: 1; }
+
+/* ---------- The press ---------- */
+/* Scale rather than translate, so the control reads as being pushed
+   into the page instead of sliding down it. Fast on the way in, eased
+   on the way out: that asymmetry is most of what makes it feel physical. */
+
+.btn:active,
+.nav-cta:active,
+.atlas-ask:active,
+.atlas-voices-hint:active,
+.chat-input button[type="submit"]:active,
+.voice-send:active,
+.suggest:active,
+.atlas-mode:active,
+.atlas-chip:active,
+.voice-chip:active,
+.atlas-ctrl:active,
+.chat-mic:active,
+.nav-toggle:active,
+.voice-sound:active,
+.voice-close:active,
+.atlas-card-close:active,
+.lightbox-close:active {
+  transform: scale(0.955);
+  transition-duration: 80ms;
+}
+
+/* The big ones have further to fall, so they compress less. A 4 per cent
+   squeeze on a full-width button looks like a glitch; on a 32px circle it
+   is barely there. */
+.btn:active,
+.atlas-ask:active,
+.atlas-voices-hint:active {
+  transform: scale(0.978);
+}
+
+.atlas-item:active { transform: scale(0.99); transition-duration: 80ms; }
+
+/* ---------- The sweep ---------- */
+/* Filled buttons only. A band of light crosses the face on hover, once,
+   and does not loop: it should read as the surface catching the light,
+   not as something demanding attention. */
+
+.btn-primary::after,
+.btn-brass::after,
+.nav-cta::after,
+.atlas-ask::after,
+.chat-input button[type="submit"]::after,
+.voice-send::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.30) 48%,
+    rgba(255, 255, 255, 0.30) 52%,
+    transparent 68%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.btn-primary:hover::after,
+.btn-brass:hover::after,
+.nav-cta:hover::after,
+.atlas-ask:hover::after,
+.chat-input button[type="submit"]:hover::after,
+.voice-send:hover::after {
+  transform: translateX(130%);
+}
+/* Brass is already bright; a white sweep on it just looks washed out. */
+.btn-brass::after {
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 68%
+  );
+}
+
+/* ---------- Hover depth ---------- */
+/* The existing rules lift these by 1 to 2px. Adding the shadow bloom is
+   what turns the lift into something the eye reads as height. */
+
+.btn-primary:hover { box-shadow: 0 16px 34px rgba(13, 21, 38, 0.32); }
+.btn-brass:hover   { box-shadow: 0 16px 34px rgba(195, 154, 80, 0.34); }
+.nav-cta:hover     { box-shadow: 0 10px 22px rgba(160, 43, 34, 0.34); }
+.atlas-ask:hover   { box-shadow: 0 12px 26px rgba(160, 43, 34, 0.42); }
+.chat-input button[type="submit"]:hover,
+.voice-send:hover  { box-shadow: 0 8px 18px rgba(160, 43, 34, 0.4); }
+
+/* ---------- Focus ---------- */
+/* One ring, brass, offset far enough to clear the rounded corners. Every
+   control gets the same one so that tabbing through the site does not
+   feel like tabbing through three different sites. */
+
+.btn:focus-visible,
+.nav-cta:focus-visible,
+.nav-toggle:focus-visible,
+.suggest:focus-visible,
+.chat-input button[type="submit"]:focus-visible,
+.chat-mic:focus-visible,
+.atlas-ctrl:focus-visible,
+.atlas-chip:focus-visible,
+.atlas-mode:focus-visible,
+.atlas-ask:focus-visible,
+.atlas-voices-hint:focus-visible,
+.atlas-item:focus-visible,
+.atlas-card-close:focus-visible,
+.voice-chip:focus-visible,
+.voice-send:focus-visible,
+.voice-sound:focus-visible,
+.voice-close:focus-visible,
+.lightbox-close:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+  /* The ripple is clipped by overflow:hidden; the focus ring must not be. */
+  overflow: visible;
+}
+
+/* On the dark panels brass alone is not bright enough against navy. */
+.voice-chip:focus-visible,
+.voice-send:focus-visible,
+.voice-sound:focus-visible,
+.voice-close:focus-visible,
+.atlas-chip:focus-visible,
+.atlas-mode:focus-visible,
+.atlas-item:focus-visible,
+.atlas-voices-hint:focus-visible {
+  outline-color: var(--brass-light);
+}
+
+/* ---------- Disabled ---------- */
+
+.chat-input button[type="submit"]:disabled,
+.voice-send:disabled,
+.btn:disabled {
+  transform: none;
+  box-shadow: none;
+}
+.chat-input button[type="submit"]:disabled::after,
+.voice-send:disabled::after { display: none; }
+
+/* ---------- Reduced motion ---------- */
+/* interactions.js does not run at all, so there is no ripple to suppress.
+   What is left is the sweep and the compression, both removed here. The
+   colour changes and the focus ring stay: those carry meaning. */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after,
+  .btn-brass::after,
+  .nav-cta::after,
+  .atlas-ask::after,
+  .chat-input button[type="submit"]::after,
+  .voice-send::after { display: none; }
+
+  .btn:active,
+  .nav-cta:active,
+  .atlas-ask:active,
+  .atlas-voices-hint:active,
+  .chat-input button[type="submit"]:active,
+  .voice-send:active,
+  .suggest:active,
+  .atlas-mode:active,
+  .atlas-chip:active,
+  .voice-chip:active,
+  .atlas-ctrl:active,
+  .chat-mic:active,
+  .nav-toggle:active,
+  .voice-sound:active,
+  .voice-close:active,
+  .atlas-item:active { transform: none; }
 }
