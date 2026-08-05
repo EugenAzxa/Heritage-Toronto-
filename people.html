@@ -21,6 +21,28 @@
   <link rel="stylesheet" href="people.css" />
 </head>
 <body class="atlas-body">
+  <!-- Loading screen. See index.html and preloader.js. On this page the
+       globe is drawn well after window load, so people.js dismisses it
+       explicitly via window.Preloader.done(). -->
+  <div class="preloader" id="preloader" role="status" aria-live="polite">
+    <div class="preloader-inner">
+      <span class="preloader-mark">
+        <svg class="preloader-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="preloader-ring-track" cx="50" cy="50" r="46" />
+          <circle class="preloader-ring-arc" cx="50" cy="50" r="46" />
+        </svg>
+        <svg class="preloader-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18v12H3z" /><path d="m3 7 9 6 9-6" />
+        </svg>
+      </span>
+      <p class="preloader-brand">Heritage Toronto <i>&times;</i> Saylavy</p>
+      <div class="preloader-bar"><span class="preloader-bar-fill"></span></div>
+      <p class="preloader-note">Drawing the world</p>
+    </div>
+  </div>
+  <noscript><style>.preloader { display: none; }</style></noscript>
+
   <a class="skip-link" href="#atlas">Skip to the atlas</a>
 
   <!-- Header -->
@@ -174,6 +196,7 @@
        plaques say so plainly instead of pretending. -->
   <script>window.ALBERT_API = "";</script>
 
+  <script src="preloader.js" defer></script>
   <script src="nav.js" defer></script>
   <script src="interactions.js" defer></script>
   <script src="voices.js" defer></script>

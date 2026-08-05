@@ -1612,3 +1612,160 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   .voice-close:active,
   .atlas-item:active { transform: none; }
 }
+
+/* ============================================================
+   PRELOADER
+   ------------------------------------------------------------
+   A postmark that draws itself while the page arrives: the two
+   things this site is about, a letter and an archive.
+
+   Three rules govern it, in order of importance:
+
+   1. It must never trap anyone. A loading screen that outlives
+      its page is worse than no loading screen, so it fails
+      open three separate ways: the script dismisses it, a CSS
+      animation dismisses it at 6s whether or not the script
+      ever ran, and <noscript> removes it entirely.
+   2. It must not invent delay. There is a 420ms floor purely
+      so a fast load does not flash, and nothing above that.
+   3. It lives in styles.css rather than an inline block
+      because the stylesheet is render-blocking: it is already
+      parsed at first paint, so the preloader is on screen in
+      the same frame the page first draws.
+   ============================================================ */
+
+.preloader {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center;
+  background: var(--navy-deep);
+  opacity: 1;
+  transition: opacity 0.55s var(--ease), visibility 0.55s var(--ease);
+
+  /* Failsafe. If the script never runs, never loads, or throws before
+     it can dismiss this, the page still becomes usable on its own. */
+  animation: preloader-failsafe 1ms linear 6s forwards;
+}
+@keyframes preloader-failsafe {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+.preloader.is-done {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+
+/* Same ledger rule as the video and the rest of the site. */
+.preloader::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom, rgba(195, 154, 80, 0.05) 0 1px, transparent 1px 84px
+  );
+}
+.preloader::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(70% 60% at 50% 45%, transparent 38%, rgba(4, 8, 16, 0.6) 100%);
+}
+
+.preloader-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 2rem;
+}
+
+/* ---------- The postmark ---------- */
+
+.preloader-mark {
+  position: relative;
+  display: grid; place-items: center;
+  width: 108px; height: 108px;
+  margin-bottom: 1.9rem;
+}
+.preloader-ring {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.preloader-ring circle {
+  fill: none; stroke-width: 2.5; stroke-linecap: round;
+}
+.preloader-ring-track { stroke: rgba(195, 154, 80, 0.20); }
+.preloader-ring-arc {
+  stroke: var(--brass-light);
+  /* r=46 -> circumference ~289. A quarter is drawn and chases its
+     own tail, which reads as a postmark being stamped rather than
+     as a spinner. */
+  stroke-dasharray: 72 217;
+  transform-origin: 50% 50%;
+  animation: preloader-arc 1.5s cubic-bezier(0.6, 0.05, 0.35, 0.95) infinite;
+}
+@keyframes preloader-arc {
+  to { transform: rotate(360deg); }
+}
+
+.preloader-glyph {
+  width: 40px; height: 40px;
+  color: var(--brass-light);
+  animation: preloader-breathe 2.8s ease-in-out infinite;
+}
+@keyframes preloader-breathe {
+  0%, 100% { opacity: 0.82; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.04); }
+}
+
+/* ---------- Wordmark ---------- */
+
+.preloader-brand {
+  margin: 0 0 1.5rem;
+  font-family: var(--font-serif); font-size: 1.42rem; font-weight: 600;
+  letter-spacing: 0.005em; color: var(--cream); text-align: center;
+}
+.preloader-brand i { font-style: normal; color: var(--brass); margin: 0 0.16em; }
+
+/* ---------- The hairline ---------- */
+
+.preloader-bar {
+  position: relative; overflow: hidden;
+  width: 208px; height: 2px;
+  background: rgba(195, 154, 80, 0.18);
+}
+.preloader-bar-fill {
+  position: absolute; inset: 0;
+  transform-origin: left center; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--brass), var(--brass-light));
+  /* Eases towards nearly-full and waits there. The script takes it the
+     rest of the way, so the bar never claims to be finished before the
+     page is. */
+  animation: preloader-fill 2.6s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+}
+@keyframes preloader-fill {
+  to { transform: scaleX(0.92); }
+}
+.preloader.is-done .preloader-bar-fill {
+  transform: scaleX(1);
+  transition: transform 0.3s var(--ease);
+  animation: none;
+}
+
+.preloader-note {
+  margin: 1.15rem 0 0;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: rgba(226, 200, 140, 0.62);
+}
+
+@media (max-width: 480px) {
+  .preloader-mark { width: 88px; height: 88px; margin-bottom: 1.5rem; }
+  .preloader-glyph { width: 33px; height: 33px; }
+  .preloader-brand { font-size: 1.18rem; }
+  .preloader-bar { width: 168px; }
+}
+
+/* Reduced motion keeps the screen and drops the movement. The arc holds
+   still, the mark stops breathing, and the bar simply sits full: the
+   information is "the page is loading", and that survives without any
+   of the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .preloader-ring-arc { animation: none; stroke-dasharray: 217 72; }
+  .preloader-glyph { animation: none; opacity: 1; }
+  .preloader-bar-fill { animation: none; transform: scaleX(1); }
+  .preloader { transition-duration: 0.01ms; }
+}

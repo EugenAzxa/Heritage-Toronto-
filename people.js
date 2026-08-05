@@ -1220,11 +1220,20 @@
     });
   }
 
+  /* The loading screen waits for the globe on this page, not for window
+     load, because the globe is drawn a long way after it. Every exit from
+     init() has to call this: an error message is no use behind a screen
+     that says the world is being drawn. */
+  function dismissPreloader() {
+    if (window.Preloader) window.Preloader.done();
+  }
+
   function fail(message) {
     el.loading.innerHTML = "";
     const p = document.createElement("span");
     p.textContent = message;
     el.loading.appendChild(p);
+    dismissPreloader();
   }
 
   /* ---------- Boot ---------- */
@@ -1263,6 +1272,7 @@
 
     el.loading.classList.add("gone");
     setSpinning(spinning);
+    dismissPreloader();
   }
 
   if (document.readyState === "loading") {
