@@ -722,6 +722,14 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .chapter:has(.chapter-body--wide) { grid-template-columns: 1fr; }
 .chapter:has(.chapter-body--wide) .chapter-num { color: var(--crimson); }
 
+/* Even-numbered chapters right-align their text, because the image sits on
+   the left and the column should read towards it. A wide chapter has no
+   image and is centred, but `.chapter:nth-child(even) .chapter-body` beats
+   `.chapter-body--wide` on specificity, so a wide chapter in an even slot
+   came out right-aligned beside its centred neighbours. Chapter VI is the
+   first even one, which is why this only appeared when it lost its photo. */
+.chapter:nth-child(even) .chapter-body--wide { text-align: center; }
+
 /* A two-column chapter puts the node dot in the gutter between the image
    and the text, which is where the spine runs. A wide chapter has no
    gutter: its card sits on the spine, so the same dot lands in the middle
