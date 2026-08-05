@@ -664,6 +664,15 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 .chapter:has(.chapter-body--wide) { grid-template-columns: 1fr; }
 .chapter:has(.chapter-body--wide) .chapter-num { color: var(--crimson); }
 
+/* A two-column chapter puts the node dot in the gutter between the image
+   and the text, which is where the spine runs. A wide chapter has no
+   gutter: its card sits on the spine, so the same dot lands in the middle
+   of the paragraph. The year pill directly above the card is already the
+   marker on the spine here, so the dot is redundant as well as in the way.
+   It comes back below 720px, where the spine moves into the left margin
+   and the dot is clear of the text again. */
+.chapter:has(.chapter-body--wide)::after { display: none; }
+
 .chapter-link {
   display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 1.3rem;
   font-family: var(--font-sans); font-weight: 600; font-size: 0.95rem;
@@ -1334,6 +1343,9 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   .chapter:nth-child(even) .chapter-body { order: 0; text-align: left; }
   .chapter-body--wide { text-align: left; margin: 0; max-width: none; }
   .chapter:has(.chapter-body--wide) { padding-left: 3rem; }
+  /* The spine is in the left margin at this width, so the dot is clear of
+     the card and earns its place back. */
+  .chapter:has(.chapter-body--wide)::after { display: block; }
   .chat { max-height: 78svh; }
   .msg { max-width: 92%; }
   .nav-cta { display: none; }
