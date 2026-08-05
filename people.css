@@ -453,3 +453,360 @@
   .atlas-card { animation: none; }
   .atlas-spinner { animation-duration: 2.4s; }
 }
+
+/* ============================================================
+   THE FIVE THAT SPEAK
+   ------------------------------------------------------------
+   Five of the 312 Heritage Toronto plaques answer questions.
+   Five gold pins in a field of 312 is invisible unless it is
+   deliberately made loud, so every surface that can carry the
+   signal does: the panel, the list row, the marker, the card.
+   ============================================================ */
+
+/* ---------- Panel call to action ---------- */
+
+.atlas-voices-hint {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.7rem;
+  width: 100%; margin: 0 0 1rem; padding: 0.7rem 0.8rem;
+  text-align: left; cursor: pointer;
+  border-radius: 12px;
+  border: 1px solid rgba(195, 154, 80, 0.42);
+  background: linear-gradient(
+    100deg,
+    rgba(195, 154, 80, 0.20),
+    rgba(195, 154, 80, 0.06) 62%
+  );
+  color: var(--brass-light);
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+.atlas-voices-hint:hover {
+  border-color: rgba(226, 200, 140, 0.85);
+  background: linear-gradient(
+    100deg,
+    rgba(195, 154, 80, 0.32),
+    rgba(195, 154, 80, 0.10) 62%
+  );
+  transform: translateY(-1px);
+}
+.atlas-voices-icon {
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(195, 154, 80, 0.22);
+  color: var(--brass-light);
+}
+.atlas-voices-text { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.atlas-voices-text strong {
+  font-family: var(--font-sans); font-size: 0.79rem; font-weight: 700;
+  letter-spacing: 0.01em; color: var(--cream);
+}
+.atlas-voices-text em {
+  font-style: normal; font-family: var(--font-sans);
+  font-size: 0.69rem; letter-spacing: 0.03em;
+  color: rgba(226, 200, 140, 0.82);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.atlas-voices-go { flex-shrink: 0; margin-left: auto; opacity: 0.7; }
+.atlas-voices-hint:hover .atlas-voices-go { opacity: 1; }
+
+/* ---------- Filter chip.  Must sit after the generic pressed rule:
+     equal specificity, so source order decides the colour. ---------- */
+
+.atlas-chip--voice {
+  color: var(--brass-light);
+  background: rgba(195, 154, 80, 0.16);
+  border-color: rgba(195, 154, 80, 0.55);
+}
+.atlas-chip--voice:hover { background: rgba(195, 154, 80, 0.28); color: #fff; }
+.atlas-chip--voice[aria-pressed="true"] {
+  color: var(--navy-deep); background: var(--brass-light);
+  border-color: var(--brass-light); font-weight: 700;
+}
+
+/* ---------- List row ---------- */
+
+.atlas-item.has-voice .pip {
+  box-shadow: 0 0 0 3px rgba(195, 154, 80, 0.28);
+}
+.voice-tag {
+  display: inline-block; vertical-align: 1px;
+  margin-left: 0.3rem; padding: 0.08rem 0.36rem;
+  border-radius: 999px;
+  font-family: var(--font-sans); font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--navy-deep); background: var(--brass-light);
+}
+
+/* ---------- Map marker ---------- */
+
+.voice-marker { background: none; border: 0; }
+.voice-marker-dot {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--brass-light);
+  color: var(--navy-deep);
+  border: 2px solid #fff;
+  box-shadow: 0 3px 10px rgba(13, 21, 38, 0.45);
+  z-index: 2;
+}
+.voice-marker-ring {
+  position: absolute; top: 50%; left: 50%;
+  width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 200, 140, 0.9);
+  animation: voicePulse 2.4s var(--ease) infinite;
+  z-index: 1;
+}
+@keyframes voicePulse {
+  0%   { transform: scale(1);   opacity: 0.85; }
+  70%  { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.voice-marker.is-on .voice-marker-dot {
+  background: var(--crimson); color: #fff;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* The label stays on screen. A tooltip you have to find by hovering is
+   no use for a feature nobody knows is there. */
+.leaflet-tooltip.voice-tip {
+  padding: 0.24rem 0.55rem;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--navy-deep);
+  background: var(--brass-light);
+  border: 0; border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(13, 21, 38, 0.35);
+  white-space: nowrap;
+}
+.leaflet-tooltip.voice-tip::before { border-right-color: var(--brass-light); }
+
+/* ---------- Card call to action ---------- */
+
+.atlas-ask {
+  display: flex; align-items: center; gap: 0.62rem;
+  width: 100%; margin: 0 0 0.7rem; padding: 0.72rem 0.85rem;
+  text-align: left; cursor: pointer;
+  border: 0; border-radius: 12px;
+  background: var(--crimson); color: #fff;
+  box-shadow: 0 6px 18px rgba(160, 43, 34, 0.3);
+  transition: background 0.18s var(--ease), transform 0.18s var(--ease);
+}
+.atlas-ask:hover { background: var(--crimson-deep); transform: translateY(-1px); }
+.atlas-ask > span {
+  display: flex; flex-direction: column; gap: 0.08rem; min-width: 0;
+  font-family: var(--font-sans); font-size: 0.85rem; font-weight: 700;
+}
+.atlas-ask em {
+  font-style: normal; font-size: 0.69rem; font-weight: 500;
+  letter-spacing: 0.02em; color: rgba(255, 255, 255, 0.78);
+}
+.atlas-ask-teaser {
+  margin: 0 0 0.9rem;
+  font-size: 0.83rem; line-height: 1.55; color: var(--ink-soft);
+}
+
+/* ============================================================
+   THE CONVERSATION PANEL
+   ============================================================ */
+
+.voice-panel {
+  position: absolute; z-index: 30;
+  /* The stage runs under the fixed header, so the panel has to start
+     below it or its own title bar is unreachable. */
+  top: calc(var(--header-h, 62px) + 0.9rem);
+  right: 0.9rem; bottom: 0.9rem;
+  width: min(390px, calc(100% - 1.8rem));
+  display: flex; flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: rgba(13, 21, 38, 0.96);
+  border: 1px solid rgba(226, 200, 140, 0.26);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+  animation: voiceIn 0.34s var(--ease) both;
+}
+@keyframes voiceIn {
+  from { opacity: 0; transform: translateX(18px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+.voice-head {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.62rem;
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+.voice-avatar {
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--brass-light); color: var(--navy-deep);
+  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.voice-id { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+.voice-id strong {
+  font-family: var(--font-serif); font-size: 1.02rem; font-weight: 600;
+  color: var(--cream); line-height: 1.2;
+}
+.voice-id em {
+  font-style: normal; font-family: var(--font-sans);
+  font-size: 0.68rem; letter-spacing: 0.03em;
+  color: rgba(252, 248, 239, 0.6);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.voice-sound, .voice-close {
+  flex-shrink: 0; display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  color: rgba(252, 248, 239, 0.66);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.18s var(--ease);
+}
+.voice-sound { margin-left: auto; }
+.voice-sound:hover, .voice-close:hover { color: var(--cream); background: rgba(255, 255, 255, 0.16); }
+.voice-sound[aria-pressed="true"] {
+  color: var(--navy-deep); background: var(--brass-light); border-color: var(--brass-light);
+}
+
+.voice-grounding {
+  flex-shrink: 0; margin: 0;
+  padding: 0.55rem 0.9rem;
+  font-family: var(--font-sans); font-size: 0.68rem; line-height: 1.5;
+  color: rgba(252, 248, 239, 0.52);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.voice-log {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: 0.9rem;
+  display: flex; flex-direction: column; gap: 0.7rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 200, 140, 0.35) transparent;
+}
+.voice-msg { display: flex; gap: 0.5rem; align-items: flex-end; }
+.voice-msg--you { justify-content: flex-end; }
+.voice-msg-avatar {
+  flex-shrink: 0; display: grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(226, 200, 140, 0.2); color: var(--brass-light);
+  font-family: var(--font-sans); font-size: 0.6rem; font-weight: 700;
+}
+.voice-bubble {
+  max-width: 84%;
+  padding: 0.62rem 0.8rem;
+  border-radius: 14px;
+  font-size: 0.87rem; line-height: 1.62;
+}
+.voice-bubble p { margin: 0; }
+.voice-bubble p + p { margin-top: 0.55rem; }
+.voice-msg--them .voice-bubble {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom-left-radius: 5px;
+  color: rgba(252, 248, 239, 0.92);
+}
+.voice-msg--you .voice-bubble {
+  background: var(--crimson); color: #fff;
+  border-bottom-right-radius: 5px;
+}
+.voice-bubble.is-typing { display: flex; gap: 4px; align-items: center; padding: 0.8rem; }
+.voice-bubble.is-typing i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(226, 200, 140, 0.75);
+  animation: voiceDot 1.3s ease-in-out infinite;
+}
+.voice-bubble.is-typing i:nth-child(2) { animation-delay: 0.18s; }
+.voice-bubble.is-typing i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes voiceDot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30%           { opacity: 1;   transform: translateY(-3px); }
+}
+.voice-note {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-sans); font-size: 0.76rem; line-height: 1.6;
+  color: rgba(252, 248, 239, 0.58);
+  padding: 0.6rem 0.7rem;
+  border-left: 2px solid rgba(226, 200, 140, 0.5);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 0 8px 8px 0;
+}
+
+.voice-chips {
+  flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 0.35rem;
+  padding: 0 0.9rem 0.6rem;
+}
+.voice-chips:empty { display: none; }
+.voice-chip {
+  padding: 0.34rem 0.62rem; border-radius: 999px; cursor: pointer;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  color: rgba(226, 200, 140, 0.9);
+  background: rgba(195, 154, 80, 0.12);
+  border: 1px solid rgba(195, 154, 80, 0.35);
+  transition: all 0.16s var(--ease);
+}
+.voice-chip:hover { background: rgba(195, 154, 80, 0.26); color: #fff; }
+
+.voice-form {
+  flex-shrink: 0; display: flex; gap: 0.45rem;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.voice-form input {
+  flex: 1 1 auto; min-width: 0;
+  padding: 0.6rem 0.8rem; border-radius: 999px;
+  font-family: var(--font-sans); font-size: 0.86rem;
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.voice-form input::placeholder { color: rgba(252, 248, 239, 0.4); }
+.voice-form input:focus-visible {
+  outline: 2px solid var(--brass-light); outline-offset: 1px;
+}
+.voice-form input:disabled { opacity: 0.5; cursor: not-allowed; }
+.voice-send {
+  flex-shrink: 0; display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  color: #fff; background: var(--crimson); border: 0;
+  transition: background 0.16s var(--ease);
+}
+.voice-send:hover { background: var(--crimson-deep); }
+.voice-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.voice-foot {
+  flex-shrink: 0; margin: 0;
+  padding: 0 0.9rem 0.75rem;
+  font-family: var(--font-sans); font-size: 0.64rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(252, 248, 239, 0.42);
+}
+.voice-panel.is-offline .voice-foot { color: rgba(226, 200, 140, 0.6); }
+
+/* On a phone the stage is only about 46vh tall, so a panel confined to it
+   leaves roughly three lines of conversation. It breaks out of the stage
+   and takes the viewport instead. */
+@media (max-width: 720px) {
+  .voice-panel {
+    position: fixed;
+    top: calc(var(--header-h, 62px) + 0.5rem);
+    right: 0.5rem; bottom: 0.5rem; left: 0.5rem; width: auto;
+  }
+  .voice-bubble { max-width: 88%; }
+  .voice-grounding { font-size: 0.66rem; padding: 0.5rem 0.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-panel { animation: none; }
+  .voice-marker-ring { animation: none; opacity: 0.55; }
+  .voice-bubble.is-typing i { animation: none; opacity: 0.65; }
+  .atlas-voices-hint:hover, .atlas-ask:hover { transform: none; }
+}
+.leaflet-tooltip.voice-tip.leaflet-tooltip-left::before { border-left-color: var(--brass-light); border-right-color: transparent; }
+.leaflet-tooltip.voice-tip.is-hidden { opacity: 0; pointer-events: none; }

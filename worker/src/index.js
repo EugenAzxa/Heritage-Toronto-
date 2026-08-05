@@ -1,15 +1,18 @@
 /* ============================================================
-   Speak with Albert  |  Cloudflare Worker proxy
+   Heritage voices  |  Cloudflare Worker proxy
    ------------------------------------------------------------
    Holds ANTHROPIC_API_KEY server-side and streams Claude's
    reply back to the static site as Server-Sent Events.
 
-   POST /chat   { messages: [{ role, content }, ...] }
+   POST /chat      { persona?: "albert", messages: [{ role, content }] }
+   GET  /personas  the ids this Worker will answer for
    GET  /health
    ============================================================ */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { ALBERT_SYSTEM_PROMPT } from "./albert-prompt.js";
+import { PERSONAS, isPersona } from "./personas.js";
+
+const DEFAULT_PERSONA = "albert";
 
 const MODEL = "claude-opus-5";
 
@@ -91,7 +94,7 @@ async function handleChat(request, env, cors) {
 
   if (!(await checkRateLimit(request, env))) {
     return json(
-      { error: "Albert needs a moment. Please wait before asking again." },
+      { error: "This voice needs a moment. Please wait before asking again." },
       429,
       cors
     );
@@ -103,6 +106,16 @@ async function handleChat(request, env, cors) {
   } catch {
     return json({ error: "Invalid JSON body." }, 400, cors);
   }
+
+  /* Only the five curated plaque voices and Albert exist. An unknown
+     id is rejected rather than quietly falling back, so a typo on the
+     client shows up as a typo instead of Albert answering for someone
+     else. */
+  const personaId = typeof body.persona === "string" ? body.persona : DEFAULT_PERSONA;
+  if (!isPersona(personaId)) {
+    return json({ error: `Unknown voice "${personaId}".` }, 400, cors);
+  }
+  const persona = PERSONAS[personaId];
 
   const { messages, error } = sanitiseMessages(body.messages);
   if (error) return json({ error }, 400, cors);
@@ -128,10 +141,12 @@ async function handleChat(request, env, cors) {
         // turn on the recommended fallback model rather than dead-ending.
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
+        // Each voice gets its own cache entry, so a busy plaque stays
+        // cheap on every turn after the first.
         system: [
           {
             type: "text",
-            text: ALBERT_SYSTEM_PROMPT,
+            text: persona.prompt,
             cache_control: { type: "ephemeral" },
           },
         ],
@@ -147,7 +162,7 @@ async function handleChat(request, env, cors) {
       if (final.stop_reason === "refusal") {
         await send("error", {
           message:
-            "I would rather not speak to that. Ask me about my mother's road north, my route, or the city that stood up for me.",
+            "I would rather not speak to that. Ask me something about my own life and I will answer gladly.",
         });
       } else {
         await send("done", {
@@ -159,8 +174,8 @@ async function handleChat(request, env, cors) {
       const status = err?.status;
       const message =
         status === 429
-          ? "Albert is answering a great many letters just now. Try again shortly."
-          : "Something went wrong reaching Albert. Please try again.";
+          ? `${persona.name} is being asked a great many questions just now. Try again shortly.`
+          : `Something went wrong reaching ${persona.name}. Please try again.`;
       await send("error", { message, status: status ?? null });
     } finally {
       await writer.close();
@@ -188,6 +203,23 @@ export default {
 
     if (url.pathname === "/health") {
       return json({ ok: true, model: MODEL, configured: Boolean(env.ANTHROPIC_API_KEY) }, 200, cors);
+    }
+
+    // Metadata only. The prompts themselves never leave the Worker.
+    if (url.pathname === "/personas") {
+      return json(
+        {
+          personas: Object.values(PERSONAS).map(({ id, name, dates, role, plaques }) => ({
+            id,
+            name,
+            dates: dates ?? null,
+            role: role ?? null,
+            plaques,
+          })),
+        },
+        200,
+        cors
+      );
     }
 
     if (url.pathname === "/chat" && request.method === "POST") {

@@ -71,6 +71,19 @@
         </button>
       </div>
 
+      <!-- The talking plaques are the thing worth finding, and they are five
+           pins among 312. This puts them one click from the top of the panel. -->
+      <button type="button" class="atlas-voices-hint" id="atlasVoicesHint">
+        <span class="atlas-voices-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-8.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
+        </span>
+        <span class="atlas-voices-text">
+          <strong>Five of these plaques will answer you</strong>
+          <em>Hubbard, Gould, Montgomery, Macleod, Volkoff</em>
+        </span>
+        <svg class="atlas-voices-go" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg>
+      </button>
+
       <form class="atlas-search" id="atlasSearch" role="search" autocomplete="off">
         <label class="sr-only" for="atlasQuery">Search people, places or eras</label>
         <span class="atlas-search-icon" aria-hidden="true">
@@ -155,7 +168,14 @@
 
   <!-- globe.gl bundles three.js; loaded from CDN because the site has no build step -->
   <script src="https://unpkg.com/globe.gl@2.34.4/dist/globe.gl.min.js" defer></script>
+
+  <!-- Base URL of the Cloudflare Worker that holds the API key. The key
+       itself is never in the browser. Empty means the five talking
+       plaques say so plainly instead of pretending. -->
+  <script>window.ALBERT_API = "";</script>
+
   <script src="nav.js" defer></script>
+  <script src="voices.js" defer></script>
   <script src="people.js" defer></script>
 </body>
 </html>

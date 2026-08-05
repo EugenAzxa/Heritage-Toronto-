@@ -98,6 +98,15 @@
   const isToronto = () => mode === "toronto";
   const dataset = () => (isToronto() ? plaques || [] : people);
 
+  /* Five of the 312 plaques can be spoken with. voices.js owns which,
+     and returns null for everything else. */
+  let voicesOnly = false;
+  const voiceMarkers = [];
+  function voiceFor(p) {
+    if (!isPlaque(p) || !window.HeritageVoices) return null;
+    return window.HeritageVoices.forPlaque(p.name);
+  }
+
   /* ---------- Helpers ---------- */
 
   // Plaques have no id; identity is name plus position.
@@ -181,7 +190,9 @@
     const raw = (el.query.value || "").trim().toLowerCase();
 
     if (isToronto()) {
-      visible = (plaques || []).filter((p) => matchesPlaque(p, raw));
+      visible = (plaques || []).filter(
+        (p) => matchesPlaque(p, raw) && (!voicesOnly || voiceFor(p))
+      );
     } else {
       const era = parseEra(raw);
       const q = era ? "" : raw;
@@ -217,6 +228,30 @@
 
   function renderFilters() {
     el.filters.innerHTML = "";
+
+    // Toronto mode has its own single control: five of these plaques talk,
+    // and 312 pins is too many to find them in by chance.
+    if (isToronto()) {
+      const n = window.HeritageVoices ? window.HeritageVoices.all().length : 0;
+      if (n) {
+        const vb = document.createElement("button");
+        vb.type = "button";
+        vb.className = "atlas-chip atlas-chip--voice";
+        vb.setAttribute("aria-pressed", String(voicesOnly));
+        vb.innerHTML =
+          '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-8.6A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+        vb.appendChild(document.createTextNode("The " + n + " that speak"));
+        vb.addEventListener("click", () => {
+          voicesOnly = !voicesOnly;
+          renderFilters();
+          applyFilters();
+          if (voicesOnly) fitToVisible();
+        });
+        el.filters.appendChild(vb);
+      }
+      return;
+    }
 
     const make = (id, label, color) => {
       const b = document.createElement("button");
@@ -286,6 +321,9 @@
       btn.className = "atlas-item" + (p.home ? " is-home" : "");
       if (selected && sameEntry(selected, p)) btn.setAttribute("aria-current", "true");
 
+      const voice = voiceFor(p);
+      if (voice) btn.classList.add("has-voice");
+
       const pip = document.createElement("span");
       pip.className = "pip";
       pip.style.background = isToronto() ? PLAQUE_COLOR : colorFor(p);
@@ -297,10 +335,18 @@
       nm.className = "nm";
       nm.textContent = p.name;
 
+      if (voice) {
+        const tag = document.createElement("span");
+        tag.className = "voice-tag";
+        tag.textContent = "Speaks";
+        nm.appendChild(document.createTextNode(" "));
+        nm.appendChild(tag);
+      }
+
       const mt = document.createElement("span");
       mt.className = "mt";
       mt.textContent = isToronto()
-        ? firstLine(p.text)
+        ? firstLine(voice ? voice.teaser : p.text)
         : [yearText(p), p.place].filter(Boolean).join("  ·  ");
 
       who.appendChild(nm);
@@ -318,7 +364,11 @@
   /* ---------- Rendering: detail card ---------- */
 
   function renderPlaqueCard(p) {
-    el.cardField.textContent = "Heritage Toronto plaque";
+    const voice = voiceFor(p);
+
+    el.cardField.textContent = voice
+      ? "Heritage Toronto plaque  ·  speaks"
+      : "Heritage Toronto plaque";
     el.cardField.style.color = PLAQUE_COLOR;
     el.cardName.textContent = p.name;
     el.cardMeta.textContent = p.lat.toFixed(5) + ", " + p.lng.toFixed(5);
@@ -329,6 +379,31 @@
     el.thumbImg.removeAttribute("src");
 
     el.cardWiki.innerHTML = "";
+
+    // The five that talk lead with the invitation, above the plaque text.
+    // Reading the plaque is what the visitor expected; being answered by
+    // it is not, so it cannot be buried at the bottom of the card.
+    if (voice) {
+      const ask = document.createElement("button");
+      ask.type = "button";
+      ask.className = "atlas-ask";
+      ask.innerHTML =
+        '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-8.6A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+      const label = document.createElement("span");
+      label.appendChild(document.createTextNode("Speak with " + voice.name));
+      const sub = document.createElement("em");
+      sub.textContent = voice.dates ? voice.dates + "  ·  " + voice.role : voice.role;
+      label.appendChild(sub);
+      ask.appendChild(label);
+      ask.addEventListener("click", () => window.HeritageVoices.open(voice));
+      el.cardWiki.appendChild(ask);
+
+      const teaser = document.createElement("p");
+      teaser.className = "atlas-ask-teaser";
+      teaser.textContent = voice.teaser;
+      el.cardWiki.appendChild(teaser);
+    }
     String(p.text || "")
       .split(/\n{1,}/)
       .map((s) => s.trim())
@@ -551,7 +626,47 @@
     markerLayer.clearLayers();
     markerFor.clear();
 
+    let voiceSeen = 0;
+    voiceMarkers.length = 0;
+
     visible.forEach((p) => {
+      const voice = voiceFor(p);
+
+      // A plaque you can talk to has to look different from a plaque you
+      // can only read, or nobody discovers the feature. It gets a haloed
+      // marker and a label that stays on screen without being hovered.
+      if (voice) {
+        const icon = L.divIcon({
+          className: "voice-marker",
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+          html:
+            '<span class="voice-marker-ring" aria-hidden="true"></span>' +
+            '<span class="voice-marker-dot" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-8.6A8.4 8.4 0 1 1 21 11.5z"/></svg></span>',
+        });
+        const m = L.marker([p.lat, p.lng], { icon, riseOnHover: true, zIndexOffset: 800 });
+
+        // Permanent labels have no collision avoidance in Leaflet, and four
+        // of the five stand within a few blocks of each other downtown. A
+        // surname is enough to read, and alternating the side keeps the
+        // labels from stacking on top of one another at city zoom.
+        const surname = voice.name.split(/\s+/).pop();
+        const right = voiceSeen++ % 2 === 0;
+        m.bindTooltip("Ask " + surname, {
+          permanent: true,
+          direction: right ? "right" : "left",
+          offset: right ? [14, 0] : [-14, 0],
+          className: "voice-tip",
+        });
+        m.on("click", () => select(p, false));
+        m.addTo(markerLayer);
+        markerFor.set(entryKey(p), m);
+        voiceMarkers.push(m);
+        return;
+      }
+
       const m = L.circleMarker([p.lat, p.lng], {
         radius: 6,
         className: "plaque-pin",
@@ -567,12 +682,44 @@
       markerFor.set(entryKey(p), m);
     });
 
+    thinLabels();
     highlightMarker();
+  }
+
+  /* Leaflet does no collision avoidance on permanent tooltips, and three
+     of the five voices stand within a few blocks of each other downtown.
+     Rather than let the labels pile up, hide any that would land on top of
+     one already placed, and bring them back as zooming separates them. The
+     marker itself is always visible, so nothing becomes unfindable. */
+  const LABEL_GAP = 116; // px between label anchors before one is dropped
+  function thinLabels() {
+    if (!lmap || !voiceMarkers.length) return;
+    const kept = [];
+    voiceMarkers.forEach((m) => {
+      const tip = m.getTooltip && m.getTooltip();
+      const node = tip && tip.getElement();
+      if (!node) return;
+      const pt = lmap.latLngToLayerPoint(m.getLatLng());
+      const clash = kept.some(
+        (q) => Math.abs(q.x - pt.x) < LABEL_GAP && Math.abs(q.y - pt.y) < 26
+      );
+      node.classList.toggle("is-hidden", clash);
+      if (!clash) kept.push(pt);
+    });
   }
 
   function highlightMarker() {
     markerFor.forEach((m, key) => {
       const on = selected && entryKey(selected) === key;
+
+      // The five voices are divIcon markers, which have no setStyle; they
+      // carry their selected state as a class on their own element.
+      if (typeof m.setStyle !== "function") {
+        const node = m.getElement();
+        if (node) node.classList.toggle("is-on", Boolean(on));
+        return;
+      }
+
       const base = m.options.__baseColor || PLAQUE_COLOR;
       m.setStyle({
         fillColor: on ? "#A02B22" : base,
@@ -584,6 +731,15 @@
   }
 
   const entryKey = (p) => p.name + "|" + p.lat + "|" + p.lng;
+
+  // Frame whatever is currently filtered in. Used when someone narrows the
+  // 312 plaques down to the five that speak; they are scattered across the
+  // city and the default view holds only a few of them.
+  function fitToVisible() {
+    if (!lmap || !window.L || !visible.length) return;
+    const bounds = window.L.latLngBounds(visible.map((p) => [p.lat, p.lng]));
+    lmap.fitBounds(bounds, { padding: [70, 70], maxZoom: 14, animate: !prefersReduced });
+  }
 
   /* ---------- World / Toronto ---------- */
 
@@ -611,7 +767,13 @@
     if (next === mode) return;
 
     if (next === "toronto") {
-      const [gotData, gotLeaflet] = await Promise.all([loadPlaques(), ensureLeaflet()]);
+      // The voice list must be in before the markers are painted, or the
+      // five that speak get drawn as ordinary plaques.
+      const [gotData, gotLeaflet] = await Promise.all([
+        loadPlaques(),
+        ensureLeaflet(),
+        window.HeritageVoices ? window.HeritageVoices.ready() : Promise.resolve(),
+      ]);
       if (!gotData || !gotLeaflet) {
         el.count.textContent = gotData
           ? "The map library could not be reached."
@@ -632,8 +794,12 @@
     document.getElementById("modeToronto").classList.toggle("is-on", isToronto());
     document.getElementById("modeToronto").setAttribute("aria-pressed", String(isToronto()));
 
-    // Fields only mean something for the people dataset.
-    el.filters.hidden = isToronto();
+    // Fields only mean something for the people dataset, but Toronto mode
+    // still needs the row: it holds the control that finds the five
+    // plaques you can speak with.
+    voicesOnly = false;
+    renderFilters();
+    el.filters.hidden = isToronto() && !el.filters.children.length;
 
     const credit = document.getElementById("atlasCredit");
     if (credit) {
@@ -647,7 +813,7 @@
     if (isToronto()) {
       title.textContent = "The city, plaque by plaque";
       lede.textContent =
-        "Every plaque on Heritage Toronto's published Exploration Map, placed on the street where it stands. Search a street, a building or a name.";
+        "Every plaque on Heritage Toronto's published Exploration Map, placed on the street where it stands. Five of them will answer you. Look for the gold markers.";
       el.query.placeholder = "Search a street, building or name...";
     } else {
       title.innerHTML = "Every pin<br/>is a life";
@@ -825,6 +991,8 @@
   /* On the street map, zooming far enough out returns to the globe. */
   function watchStreetZoom() {
     if (!lmap) return;
+    // Zooming changes which voice labels fit without overlapping.
+    lmap.on("zoomend", thinLabels);
     lmap.on("zoomend", () => {
       if (isToronto() || surface !== "street") return;
       if (lmap.getZoom() <= RETURN_ZOOM) {
@@ -1002,6 +1170,19 @@
 
     document.getElementById("modeWorld").addEventListener("click", () => setMode("world"));
     document.getElementById("modeToronto").addEventListener("click", () => setMode("toronto"));
+
+    // One click from anywhere: switch to the plaques, keep only the five
+    // that speak, and frame them.
+    const hint = document.getElementById("atlasVoicesHint");
+    if (hint) {
+      hint.addEventListener("click", async () => {
+        if (!isToronto()) await setMode("toronto");
+        voicesOnly = true;
+        renderFilters();
+        applyFilters();
+        fitToVisible();
+      });
+    }
 
     el.home.addEventListener("click", () => {
       if (isToronto()) {
