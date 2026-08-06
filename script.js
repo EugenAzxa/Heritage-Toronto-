@@ -381,22 +381,31 @@
     if (!voices.length) return;
 
     const preferred = [
+      /Microsoft Richard/i,          // en-CA male, ships with Windows
       /Google UK English Male/i,
-      /\bDaniel\b/i,
+      /\bDaniel\b/i,                 // en-GB male, macOS and iOS
       /Microsoft (Guy|Ryan|George|David)/i,
       /\bAlex\b/i,
       /\bFred\b/i,
     ];
     const english = voices.filter((v) => /^en(-|_|$)/i.test(v.lang));
-    for (const rx of preferred) {
-      const hit = english.find((v) => rx.test(v.name));
-      if (hit) {
-        albertVoice = hit;
-        return;
+    const canadian = english.filter((v) => /en-CA/i.test(v.lang));
+
+    /* Search the Canadian voices before the rest. A name further up the
+       list used to win outright, so on a stock Windows machine Toronto's
+       first Black letter carrier read his own story in an American accent
+       while Microsoft Richard, en-CA, sat unused two entries below. */
+    for (const pool of [canadian, english]) {
+      for (const rx of preferred) {
+        const hit = pool.find((v) => rx.test(v.name));
+        if (hit) {
+          albertVoice = hit;
+          return;
+        }
       }
     }
     albertVoice =
-      english.find((v) => /en-CA/i.test(v.lang)) ||
+      canadian[0] ||
       english.find((v) => /en-GB/i.test(v.lang)) ||
       english[0] ||
       voices[0];

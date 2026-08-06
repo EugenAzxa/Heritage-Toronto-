@@ -182,30 +182,45 @@
   /* ---------- Speech ---------- */
 
   const synth = window.speechSynthesis || null;
-  let chosenVoice = null;
 
-  function pickVoice() {
+  /* The synthesiser exposes no gender, so match on the names that actually
+     ship with the major platforms. Windows gives David, Mark, Richard,
+     Zira and Linda; macOS and iOS give Alex, Daniel, Samantha, Karen and
+     the rest. Anything unrecognised falls through to language matching. */
+  const MALE = /\b(Richard|David|Mark|Guy|Ryan|George|Alex|Daniel|Fred|Oliver|Arthur|Aaron|Thomas|Tom|James)\b/i;
+  const FEMALE = /\b(Linda|Zira|Susan|Hazel|Heera|Samantha|Karen|Moira|Fiona|Tessa|Serena|Catherine|Sonia|Victoria|Ava|Allison|Joanna|Emily)\b/i;
+
+  /* Five people, not one narrator. Reading L. M. Montgomery in Microsoft
+     David, which is what a single shared voice resolved to on a stock
+     Windows machine, is the sort of detail that undoes the whole effect.
+     Canadian English first, then the right voice for the person, then
+     whatever English exists. */
+  function pickVoice(voice) {
     if (!synth) return null;
-    if (chosenVoice) return chosenVoice;
     const list = synth.getVoices() || [];
     if (!list.length) return null;
-    // Prefer an English voice; anything else is better than nothing.
-    chosenVoice =
-      list.find((v) => /en-GB/i.test(v.lang)) ||
-      list.find((v) => /^en/i.test(v.lang)) ||
-      list[0];
-    return chosenVoice;
+
+    const english = list.filter((v) => /^en(-|_|$)/i.test(v.lang));
+    if (!english.length) return list[0];
+
+    const canadian = english.filter((v) => /en-CA/i.test(v.lang));
+    const wants = voice && voice.speaks === "female" ? FEMALE : MALE;
+
+    for (const pool of [canadian, english]) {
+      const hit = pool.find((v) => wants.test(v.name));
+      if (hit) return hit;
+    }
+    return canadian[0] || english.find((v) => /en-GB/i.test(v.lang)) || english[0];
   }
-  if (synth) synth.addEventListener?.("voiceschanged", () => (chosenVoice = null));
 
   function speak(text) {
     if (!speaking || !synth || !text) return;
     stopSpeaking();
     const u = new SpeechSynthesisUtterance(text);
-    const v = pickVoice();
+    const v = pickVoice(current);
     if (v) u.voice = v;
     u.rate = 0.96;
-    u.pitch = 1;
+    u.pitch = current && current.speaks === "female" ? 1.04 : 0.94;
     synth.speak(u);
   }
 
@@ -354,6 +369,11 @@
     el.root.hidden = false;
     el.root.classList.add("is-open");
 
+    /* The opening line is read aloud either way. It is written into the
+       record, not generated, so it does not need the Worker; and with the
+       Worker unconfigured this is the only chance a visitor gets to hear
+       that a plaque speaks at all. Leaving it silent made the offline
+       build demonstrate everything about the feature except the voice. */
     if (API_BASE) {
       el.foot.textContent = "Live, and answering as themselves.";
       el.root.classList.remove("is-offline");
@@ -379,6 +399,7 @@
         ".";
       el.log.appendChild(note);
       renderChips([]);
+      speak(voice.opening);
       setBusy(true);
       el.input.placeholder = "Not connected on this build";
     }
