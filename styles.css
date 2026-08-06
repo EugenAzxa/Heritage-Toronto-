@@ -2105,3 +2105,72 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
   .brand-ht { height: 26px; }
   .footer-affiliation { text-align: left; }
 }
+
+/* ============================================================
+   CHAT TOPBAR ON A PHONE
+   ------------------------------------------------------------
+   Avatar, name, role, live/offline badge, voice toggle and
+   "Start over" is more than fits one row at 375px. It did not
+   scroll the page, because the chat clips it, but the reset
+   button sat at x=370 in a 375px viewport: present, and
+   unreachable. It wraps now, and the buttons keep their icons
+   while the labels go.
+   ============================================================ */
+
+@media (max-width: 620px) {
+  .chat-topbar { flex-wrap: wrap; gap: 0.6rem 0.5rem; padding: 0.8rem 1rem; }
+  .chat-avatar { width: 38px; height: 38px; }
+  .chat-who { flex: 1 1 auto; min-width: 0; }
+  .chat-who strong { font-size: 0.95rem; }
+  .chat-who span { font-size: 0.72rem; }
+
+  /* The badge keeps its place at the end of the first row; the two
+     buttons drop to a second row and share it. */
+  .chat-mode { margin-left: auto; }
+  .chat-voice, .chat-reset { margin-left: 0; flex: 0 0 auto; }
+  .chat-voice { order: 3; }
+  .chat-reset { order: 4; margin-left: auto; }
+}
+
+/* Below 380px even the wrapped row is tight, so the buttons keep the
+   glyph and drop the word. Both still carry an accessible name. */
+@media (max-width: 380px) {
+  .chat-voice span, .chat-reset { font-size: 0.72rem; }
+  .chat-reset { padding: 0.45rem 0.6rem; }
+  .chat-voice { padding: 0.45rem 0.6rem; }
+}
+
+/* ============================================================
+   HEADER ON A VERY NARROW PHONE
+   ------------------------------------------------------------
+   At 320px the brand lockup took 267px of a 305px line and flex
+   crushed the menu button down to 2px. The button was still in
+   the DOM, still focusable, and impossible to hit: on a 320px
+   phone there was no way to open the navigation at all.
+
+   The button never shrinks now, and the brand gives way instead.
+   ============================================================ */
+
+.nav-toggle { flex-shrink: 0; }
+
+@media (max-width: 420px) {
+  .brand { min-width: 0; }
+  .brand-text { min-width: 0; }
+  .brand-lockup { min-width: 0; }
+  /* Truncate rather than wrap: two ragged lines in a 60px-tall header
+     looks broken, one clipped line reads as intentional. */
+  .brand-text strong,
+  .brand-text em {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: block;
+  }
+  .brand-lockup { display: flex; }
+}
+
+/* Footer links sit at 15px tall, which is a small target on a phone. The
+   two inline "Saylavy" links inside sentences are exempt under WCAG 2.2
+   and are left alone; the column links are list navigation and get the
+   padding. */
+@media (max-width: 720px) {
+  .footer-col a { display: inline-block; padding: 0.32rem 0; }
+}

@@ -417,10 +417,16 @@
 
 @media (max-width: 860px) {
   .atlas-body { overflow: auto; }
+  /* minmax(0, 1fr), not 1fr. A grid item carries min-width: auto, so a 1fr
+     track cannot shrink below its content's min-content width. The voices
+     button holds a nowrap subtitle whose min-content is 352px, which jammed
+     the single column open at 384px inside a 345px viewport and gave the
+     whole page a horizontal scrollbar below 384px. */
   .atlas {
-    position: static; grid-template-columns: 1fr;
+    position: static; grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 56vh auto; min-height: 100vh;
   }
+  .atlas-panel, .atlas-stage { min-width: 0; }
   .atlas-stage { order: 1; min-height: 56vh; }
   .atlas-panel {
     order: 2; overflow: visible; border-right: none;
@@ -507,6 +513,9 @@
   font-size: 0.69rem; letter-spacing: 0.03em;
   color: rgba(226, 200, 140, 0.82);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Without this the nowrap list of five names sets a 352px min-content
+     that the layout above cannot get under. */
+  min-width: 0;
 }
 .atlas-voices-go { flex-shrink: 0; margin-left: auto; opacity: 0.7; }
 .atlas-voices-hint:hover .atlas-voices-go { opacity: 1; }
