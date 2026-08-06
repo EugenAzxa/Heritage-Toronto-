@@ -810,3 +810,37 @@
 }
 .leaflet-tooltip.voice-tip.leaflet-tooltip-left::before { border-left-color: var(--brass-light); border-right-color: transparent; }
 .leaflet-tooltip.voice-tip.is-hidden { opacity: 0; pointer-events: none; }
+
+/* ============================================================
+   FACES ON THE VOICES
+   ------------------------------------------------------------
+   A plaque that answers shows the person who answers it. The
+   portrait comes from the same resolver the chat panel uses, so
+   the card and the conversation show the same face.
+   ============================================================ */
+
+/* The default card thumbnail is a 16:10 landscape band, which is right for
+   a place and wrong for a person: it crops a standing portrait at the chin.
+   A voice gets a taller frame, and the crop is pulled towards the top of
+   the image, where heads are. */
+.atlas-card-thumb--face {
+  aspect-ratio: 4 / 5;
+  max-height: 210px;
+  width: auto;
+  margin-inline: auto;
+  border-radius: 12px;
+}
+.atlas-card-thumb--face img { object-position: 50% 18%; }
+
+/* Avatars: the portrait fills the circle when it has loaded, the initials
+   stay underneath until it does. */
+.voice-avatar img,
+.voice-msg-avatar img {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 15%;
+  display: block;
+}
+.voice-avatar { overflow: hidden; }
+.voice-msg-avatar { overflow: hidden; }

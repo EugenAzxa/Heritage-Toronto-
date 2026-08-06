@@ -31,6 +31,7 @@
 
   /* Conversation state. One at a time; opening a new voice ends the last. */
   let current = null;
+  let currentFace = null;   // portrait URL for the open voice, once it arrives
   let history = [];
   let inFlight = null;
   let speaking = true;
@@ -62,6 +63,34 @@
 
   const forPlaque = (name) => byPlaque.get(name) || null;
   const all = () => voices.slice();
+
+  /* ---------- Portraits ----------
+     Faces come from the same Wikipedia summary endpoint the atlas already
+     uses for its people, keyed off the wiki title in voices.json. Cached by
+     id, including the misses, so a voice with no portrait is not re-fetched
+     every time its card opens. Everything downstream treats a null as "show
+     the initials", so a failure is never visible as a broken image. */
+  const portraits = new Map();
+
+  function portrait(voice) {
+    if (!voice) return Promise.resolve(null);
+    if (portraits.has(voice.id)) return Promise.resolve(portraits.get(voice.id));
+
+    const title = (voice.wiki || voice.name).replace(/ /g, "_");
+    const p = fetch(
+      "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title),
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => (j && j.thumbnail ? j.thumbnail.source : null))
+      .catch(() => null)
+      .then((src) => {
+        portraits.set(voice.id, src);
+        return src;
+      });
+
+    return p;
+  }
 
   /* ---------- Panel construction ---------- */
 
@@ -196,17 +225,28 @@
       .join("");
   }
 
+  /* One avatar builder for the header and every message: the portrait when
+     it has arrived, the initials until then and if it never does. */
+  function avatar(cls) {
+    const av = document.createElement("span");
+    av.className = cls;
+    av.setAttribute("aria-hidden", "true");
+    if (currentFace) {
+      const img = document.createElement("img");
+      img.src = currentFace;
+      img.alt = "";
+      av.appendChild(img);
+    } else {
+      av.textContent = current ? initials(current.name) : "";
+    }
+    return av;
+  }
+
   function addMessage(who, text) {
     const row = document.createElement("div");
     row.className = "voice-msg voice-msg--" + who;
 
-    if (who === "them") {
-      const av = document.createElement("span");
-      av.className = "voice-msg-avatar";
-      av.setAttribute("aria-hidden", "true");
-      av.textContent = current ? initials(current.name) : "";
-      row.appendChild(av);
-    }
+    if (who === "them") row.appendChild(avatar("voice-msg-avatar"));
 
     const bubble = document.createElement("div");
     bubble.className = "voice-bubble";
@@ -236,10 +276,7 @@
   function showTyping() {
     const row = document.createElement("div");
     row.className = "voice-msg voice-msg--them";
-    const av = document.createElement("span");
-    av.className = "voice-msg-avatar";
-    av.setAttribute("aria-hidden", "true");
-    av.textContent = current ? initials(current.name) : "";
+    const av = avatar("voice-msg-avatar");
     const bubble = document.createElement("div");
     bubble.className = "voice-bubble is-typing";
     bubble.innerHTML = "<i></i><i></i><i></i>";
@@ -278,9 +315,33 @@
     stopSpeaking();
 
     current = voice;
+    currentFace = null;
     history = [];
 
     el.avatar.textContent = initials(voice.name);
+
+    /* The portrait arrives after the panel has already opened, so it is
+       painted in when it lands rather than held for. Guarded on `current`
+       because a visitor can open a second voice while the first is still
+       in flight. */
+    portrait(voice).then((src) => {
+      if (!src || current !== voice) return;
+      currentFace = src;
+      el.avatar.textContent = "";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      el.avatar.appendChild(img);
+      // Any bubble already on screen gets the face too.
+      el.log.querySelectorAll(".voice-msg-avatar").forEach((av) => {
+        if (av.querySelector("img")) return;
+        av.textContent = "";
+        const i2 = document.createElement("img");
+        i2.src = src;
+        i2.alt = "";
+        av.appendChild(i2);
+      });
+    });
     el.name.textContent = voice.name;
     el.role.textContent = [voice.dates, voice.role].filter(Boolean).join("  ·  ");
     el.grounding.textContent =
@@ -432,5 +493,5 @@
     }
   }
 
-  window.HeritageVoices = { ready, forPlaque, all, open, close, isOpen };
+  window.HeritageVoices = { ready, forPlaque, all, open, close, isOpen, portrait };
 })();

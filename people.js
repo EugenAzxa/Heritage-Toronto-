@@ -354,6 +354,7 @@
     // The plaque's own words are the content; there is nothing to fetch.
     el.cardBlurb.textContent = "";
     el.thumb.hidden = true;
+    el.thumb.classList.remove("atlas-card-thumb--face");
     el.thumbImg.removeAttribute("src");
 
     el.cardWiki.innerHTML = "";
@@ -381,6 +382,8 @@
       teaser.className = "atlas-ask-teaser";
       teaser.textContent = voice.teaser;
       el.cardWiki.appendChild(teaser);
+
+      loadVoicePortrait(voice, p);
     }
     String(p.text || "")
       .split(/\n{1,}/)
@@ -405,6 +408,21 @@
     if (body) body.scrollTop = 0;
   }
 
+  /* A plaque that speaks shows the face of whoever answers. The plaque
+     itself has no image; the portrait comes from the person's record, via
+     the same resolver the chat panel uses, so both show the same face. */
+  async function loadVoicePortrait(voice, plaque) {
+    if (!window.HeritageVoices || !window.HeritageVoices.portrait) return;
+    const src = await window.HeritageVoices.portrait(voice);
+    // The visitor may have moved to another plaque while this was in flight.
+    if (!src || !selected || !sameEntry(selected, plaque)) return;
+
+    el.thumbImg.src = src;
+    el.thumbImg.alt = "Portrait of " + voice.name;
+    el.thumb.classList.add("atlas-card-thumb--face");
+    el.thumb.hidden = false;
+  }
+
   // Branch on what the record IS, not on which mode is showing it: the
   // street map can now carry people as well as plaques.
   const isPlaque = (p) => p && typeof p.text === "string" && !p.wiki;
@@ -423,6 +441,7 @@
       "https://en.wikipedia.org/wiki/" + encodeURIComponent(title.replace(/ /g, "_"));
 
     el.thumb.hidden = true;
+    el.thumb.classList.remove("atlas-card-thumb--face");
     el.thumbImg.removeAttribute("src");
     el.cardWiki.innerHTML = "";
     const loading = document.createElement("p");
