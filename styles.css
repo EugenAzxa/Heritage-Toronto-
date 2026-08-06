@@ -2174,3 +2174,94 @@ h1, h2, h3, h4 { line-height: 1.08; margin: 0; font-weight: 600; }
 @media (max-width: 720px) {
   .footer-col a { display: inline-block; padding: 0.32rem 0; }
 }
+
+/* ============================================================
+   THE PROPOSAL FILM
+   ------------------------------------------------------------
+   Navy, after the parchment of the collaboration section, so the
+   page darkens into the film the way a room does.
+   ============================================================ */
+
+.film {
+  position: relative;
+  padding: clamp(4rem, 8vw, 6.5rem) 0 clamp(4.5rem, 9vw, 7rem);
+  background:
+    radial-gradient(120% 90% at 50% 0%, #1B2C4C 0%, var(--navy) 45%, var(--navy-deep) 100%);
+  color: var(--cream);
+}
+.film-inner {
+  max-width: 1040px; margin: 0 auto; padding: 0 var(--gutter);
+}
+.film-head { max-width: 720px; margin-bottom: clamp(2rem, 4vw, 3rem); }
+.film-lede {
+  margin: 1.2rem 0 0;
+  font-size: clamp(1.02rem, 1.8vw, 1.18rem); line-height: 1.7;
+  color: rgba(246, 238, 221, 0.76);
+}
+
+.film-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(226, 200, 140, 0.28);
+  box-shadow: 0 40px 90px rgba(3, 7, 14, 0.6);
+  background: var(--navy-deep);
+}
+
+/* The facade: a still, a scrim, a button, a caption. */
+.film-play {
+  position: absolute; inset: 0;
+  display: block; width: 100%; height: 100%;
+  padding: 0; border: 0; cursor: pointer;
+  background: none; color: inherit;
+}
+.film-play img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.6s var(--ease), filter 0.4s var(--ease);
+}
+.film-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(7,12,23,0.10) 0%, rgba(7,12,23,0.06) 55%, rgba(7,12,23,0.22) 100%);
+  transition: background 0.4s var(--ease);
+}
+.film-btn {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: grid; place-items: center;
+  width: 78px; height: 78px; border-radius: 50%;
+  background: var(--crimson); color: #fff;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  transition: transform 0.28s var(--ease), background 0.28s var(--ease);
+  /* Nudge the triangle so it reads as centred in the circle. */
+  padding-left: 5px;
+}
+
+.film-play:hover img,
+.film-play:focus-visible img { transform: scale(1.03); }
+.film-play:hover .film-btn,
+.film-play:focus-visible .film-btn {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: var(--crimson-deep);
+}
+.film-play:hover .film-scrim {
+  background: linear-gradient(180deg, rgba(7,12,23,0.04) 0%, transparent 55%, rgba(7,12,23,0.16) 100%);
+}
+.film-play:focus-visible { outline: 2px solid var(--brass-light); outline-offset: -4px; }
+
+/* The real player, once it has been asked for. */
+.film-embed { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.film-note {
+  margin: 1.3rem 0 0;
+  font-family: var(--font-sans); font-size: 0.84rem; line-height: 1.6;
+  color: rgba(246, 238, 221, 0.6);
+}
+.film-note a { color: var(--brass-light); }
+
+@media (max-width: 600px) {
+  .film-btn { width: 62px; height: 62px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-play:hover img, .film-play:focus-visible img { transform: none; }
+  .film-play:hover .film-btn, .film-play:focus-visible .film-btn { transform: translate(-50%, -50%); }
+}

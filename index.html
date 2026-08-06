@@ -73,6 +73,7 @@
       <a href="#legacy">Legacy</a>
       <a href="#gallery">Sources</a>
       <a href="#street">On the street</a>
+      <a href="#film">Video</a>
       <a href="people.html">Atlas</a>
     </nav>
     <a class="nav-cta" href="#about">
@@ -583,6 +584,41 @@
       <p class="street-close reveal">Start with one plaque. If it does not earn its place, we take the plate off and you have lost nothing.</p>
     </div>
   </section>
+
+  <!-- ============ THE FILM ============ -->
+  <section class="film" id="film">
+    <div class="film-inner">
+      <div class="film-head reveal">
+        <p class="section-eyebrow section-eyebrow--light"><span class="eyebrow-line"></span>Watch</p>
+        <h2 class="section-title section-title--light">Collaboration proposal video</h2>
+        <p class="film-lede">The whole proposal, end to end. If you only have a minute, start here.</p>
+      </div>
+
+      <!-- Click to load. The YouTube player pulls roughly a megabyte of script
+           and sets third-party cookies the moment its iframe exists, so the
+           page ships a still and swaps in the real player only when someone
+           asks for it. film.js does the swap. -->
+      <div class="film-frame reveal">
+        <a class="film-play" id="filmPlay"
+           href="https://youtu.be/G1V2db9jXYQ"
+           target="_blank" rel="noopener"
+           data-video="G1V2db9jXYQ"
+           data-title="Heritage Toronto and Saylavy, collaboration proposal">
+          <img src="assets/film-poster.jpg" alt="" width="1280" height="720" loading="lazy" />
+          <span class="film-scrim" aria-hidden="true"></span>
+          <span class="film-btn" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.2v13.6L19 12z"/></svg>
+          </span>
+          <span class="sr-only">Play the collaboration proposal video</span>
+        </a>
+      </div>
+
+      <p class="film-note reveal">
+        Hosted on <a href="https://youtu.be/G1V2db9jXYQ" target="_blank" rel="noopener">YouTube</a>,
+        so it can be forwarded, embedded in a report, or shown in a meeting room without this site.
+      </p>
+    </div>
+  </section>
   </main>
 
   <!-- Lightbox -->
@@ -610,6 +646,8 @@
         <a href="#speak">Speak with Albert</a>
         <a href="#legacy">Legacy</a>
         <a href="#gallery">Sources</a>
+        <a href="#street">On the street</a>
+        <a href="#film">Proposal video</a>
         <a href="people.html">Atlas of Lives</a>
       </div>
       <div class="footer-col">
@@ -646,6 +684,7 @@
   <script src="script.js"></script>
   <!-- Decorative hero globe. Self-skips on mobile and reduced motion,
        and only then fetches globe.gl. -->
+  <script src="film.js" defer></script>
   <script src="hero-stage.js" defer></script>
 </body>
 </html>
