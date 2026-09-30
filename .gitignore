@@ -37,3 +37,7 @@ videos/*/capture/
 videos/*/snapshots/
 videos/*/.hyperframes/
 videos/*/.thumbnails/
+
+# Working screenshots from browser checks. Regenerable, and some belong to other
+# projects entirely — they live on disk but never in the history.
+screenshots/
