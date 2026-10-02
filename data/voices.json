@@ -1,6 +1,6 @@
 {
  "version": 1,
- "note": "Five of Heritage Toronto's 312 plaques can be spoken with. These five were chosen because each has a documented life behind the plaque, enough to ground a conversation in the record rather than in invention. The grounding prompts live server-side in worker/src/personas.js; this file holds only what the browser needs in order to show the affordance. Plaque titles are matched verbatim against data/plaques.json. Glenn Gould has two plaques and both are him. Each voice carries a  hint so the synthesiser is not asked to read a woman in a man's voice. Each voice also carries a speaks hint, so the synthesiser is not asked to read a woman in a man voice.",
+ "note": "Five of Heritage Toronto's 312 plaques can be spoken with. These five were chosen because each has a documented life behind the plaque, enough to ground a conversation in the record rather than in invention. The grounding prompts live server-side in worker/src/personas.js; this file holds only what the browser needs in order to show the affordance. Plaque titles are matched verbatim against data/plaques.json. Glenn Gould has two plaques and both are him. Each voice carries a speaks hint, so the synthesiser is never asked to read a woman in a man's voice.",
  "count": 5,
  "voices": [
   {
